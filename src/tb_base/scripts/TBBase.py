@@ -37,7 +37,7 @@ class TBBase:
 			if self.pruefeFelder().mitte=='Belegt':
 				break
 			self.movePub.publish(twist)
-		self.movePub.publish(Twist())
+		#self.movePub.publish(Twist())
 
 
 	def drehe(self,richtung='rechts'):
