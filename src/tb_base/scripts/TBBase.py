@@ -54,16 +54,16 @@ class TBBase:
 		self.map.printPosition()
 		self.map.updateMap(self.pruefeFelder())
 
-	def drehe(self,richtung='rechts'):
+	def drehe(self,richtung='links'):
 		z = self.turnSpeed
 		w = self.heading
 		new_heading = self.heading+90
-		if richtung == 'links':
+		if richtung == 'rechts':
 			z = -self.turnSpeed
 			new_heading = self.heading-90
-			self.map.turn('links')
-		else:
 			self.map.turn('rechts')
+		else:
+			self.map.turn('links')
 		if new_heading <0:
 			new_heading=new_heading+360
 		if new_heading > 360:
