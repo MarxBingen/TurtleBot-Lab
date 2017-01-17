@@ -25,7 +25,7 @@ class TBBase:
 	def __init__(self):
 		print "Starte System..."
 		rospy.init_node('TurtleBotLab')
-		self.map = TBMap(10)
+		self.map = TBMap(10,self.gridSize)
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
@@ -52,6 +52,7 @@ class TBBase:
 		#self.movePub.publish(Twist())
 		self.map.updatePosition()
 		self.map.printPosition()
+		self.map.updateMap(self.pruefeFelder())
 
 	def drehe(self,richtung='rechts'):
 		z = self.turnSpeed
