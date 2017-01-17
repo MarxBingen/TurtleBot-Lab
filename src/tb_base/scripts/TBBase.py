@@ -33,9 +33,18 @@ class TBBase:
 		twist = Twist()
 		twist.linear.x = self.speed
 		t_end = time.time() + (self.gridSize / self.speed)
+		wc=''
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			if self.pruefeFelder().mitte=='Belegt':
 				break
+			wc = self.wallDetector.wallGetsCloser()
+			if (not wc == ''):
+				if wc == 'rechts':
+					twist.angular.z=0.58
+				if wc == 'links':
+					twist.angular.z=-0.58
+			else:
+				twist.angular.z=0
 			self.movePub.publish(twist)
 		#self.movePub.publish(Twist())
 
