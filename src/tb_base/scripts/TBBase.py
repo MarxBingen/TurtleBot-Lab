@@ -9,6 +9,7 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
 
 from WallDetection import WallDetection
+from TBMap import TBMap
 
 class TBBase:
 
@@ -19,10 +20,12 @@ class TBBase:
 	heading = 0
 	magSub = None
 	wallDetector = None
+	map = None
 
 	def __init__(self):
 		print "Starte System..."
 		rospy.init_node('TurtleBotLab')
+		self.map = TBMap(10)
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
@@ -47,7 +50,8 @@ class TBBase:
 				twist.angular.z=0
 			self.movePub.publish(twist)
 		#self.movePub.publish(Twist())
-
+		self.map.updatePosition()
+		self.map.printPosition()
 
 	def drehe(self,richtung='rechts'):
 		z = self.turnSpeed
@@ -56,6 +60,9 @@ class TBBase:
 		if richtung == 'links':
 			z = -self.turnSpeed
 			new_heading = self.heading-90
+			self.map.turn('links')
+		else:
+			self.map.turn('rechts')
 		if new_heading <0:
 			new_heading=new_heading+360
 		if new_heading > 360:
