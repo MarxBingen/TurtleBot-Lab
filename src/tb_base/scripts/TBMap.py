@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import tf_conversions
 from tf2_ros import TransformBroadcaster
 
 from TBHeading import SimpleHeading
@@ -52,8 +53,9 @@ class TBMap:
 		t.header.stamp = rospy.Time.now()
 		t.transform.translation.x=(self.posX-self.size)*self.raster
 		t.transform.translation.y=(self.posY-self.size)*self.raster
-		t.transform.rotation = Quaternion()
-		t.transform.rotation.w = 1.0 
+		
+		t.transform.rotation = Quaternion(*tf_conversions.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading)))
+		#t.transform.rotation.w = 1.0 
 		self.tfPub.sendTransform(t)
 
 	def updateMap(self, feldbelegung):
