@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
 import rospy
+from tf2_ros import TransformBroadcaster
+
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Pose,Point
+from geometry_msgs.msg import Pose,Point,TransformStamped,Quaternion
 class TBMap:
 	
 	mapArray = []
@@ -17,11 +19,11 @@ class TBMap:
 		self.size=size
 		self.raster=raster
 		self.mapArray = [-1]*(size*2*size*2)
-		print self.mapArray
 		#Ausgangsposition auf null setzen
 		self.posX = size
 		self.posY = size
 		self.mapPub = rospy.Publisher('map',OccupancyGrid,queue_size=1)
+		self.tfPub = TransformBroadcaster()
 
 	def turn(self,richtung):
 		self.heading = SimpleHeading.turn(self.heading,richtung)
@@ -41,29 +43,41 @@ class TBMap:
 		elif self.heading is SimpleHeading.OST:
 			self.posX = self.posX + 1
 
+
+	def broadcastMapToOdomTF(self):
+		#broadcast map to odom transform
+		t = TransformStamped()
+		t.child_frame_id = "odom"
+		t.header.frame_id = "map"
+		t.header.stamp = rospy.Time.now()
+		t.transform.translation.x=(self.posX-self.size)*self.raster
+		t.transform.translation.y=(self.posY-self.size)*self.raster
+		t.transform.rotation = Quaternion()
+		t.transform.rotation.w = 1.0 
+		self.tfPub.sendTransform(t)
+
 	def updateMap(self, feldbelegung):
 		posX=self.posX
 		posY=self.posY
-		s=self.size
-		print self.mapArray
-		self.mapArray[posY*self.size+posX]=0
+		s=self.size*2
+		self.mapArray[posY*s+posX]=0
 		if self.heading is SimpleHeading.NORD:
-			self.mapArray[posY+1 *s+ posX  ] = 0 if feldbelegung.mitte == 'Frei' else 100
-			self.mapArray[posY   *s+ posX-1] = 0 if feldbelegung.links == 'Frei' else 100
-			self.mapArray[posY   *s+ posX+1] = 0 if feldbelegung.rechts == 'Frei' else 100
+			self.mapArray[(posY+1)*s + posX  ] = 0 if feldbelegung.mitte == 'Frei' else 100
+			self.mapArray[(posY  )*s + posX-1] = 0 if feldbelegung.links == 'Frei' else 100
+			self.mapArray[(posY  )*s + posX+1] = 0 if feldbelegung.rechts == 'Frei' else 100
 		elif self.heading is SimpleHeading.SUED:
-			self.mapArray[posY-1 *s+ posX  ]= 0 if feldbelegung.mitte == 'Frei' else 100
-			self.mapArray[posY   *s+ posX+1]= 0 if feldbelegung.links == 'Frei' else 100
-			self.mapArray[posY   *s+ posX-1]= 0 if feldbelegung.rechts == 'Frei' else 100
+			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.mitte == 'Frei' else 100
+			self.mapArray[(posY   )*s+ posX+1]= 0 if feldbelegung.links == 'Frei' else 100
+			self.mapArray[(posY   )*s+ posX-1]= 0 if feldbelegung.rechts == 'Frei' else 100
 		elif self.heading is SimpleHeading.WEST:
-			self.mapArray[posY   *s+ posX-1]= 0 if feldbelegung.mitte == 'Frei' else 100
-			self.mapArray[posY-1 *s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
-			self.mapArray[posY+1 *s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
+			self.mapArray[(posY   )*s+ posX-1]= 0 if feldbelegung.mitte == 'Frei' else 100
+			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
+			self.mapArray[(posY+1 )*s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
 		elif self.heading is SimpleHeading.OST:
-			self.mapArray[posY   *s+ posX+1]= 0 if feldbelegung.mitte == 'Frei' else 100
-			self.mapArray[posY+1 *s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
-			self.mapArray[posY-1 *s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
-		#self.updateOccupancyGrid()
+			self.mapArray[(posY   )*s+ posX+1]= 0 if feldbelegung.mitte == 'Frei' else 100
+			self.mapArray[(posY+1 )*s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
+			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
+		self.updateOccupancyGrid()
 
 	def updateOccupancyGrid(self):
 		self.map.info.resolution=self.raster

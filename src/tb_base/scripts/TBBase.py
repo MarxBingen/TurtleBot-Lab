@@ -95,6 +95,7 @@ class TBBase:
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
 		yaw = math.degrees(math.atan2(s3,s4))+180
 		self.heading = yaw
+		self.map.broadcastMapToOdomTF()
 
 	def pruefeFelder(self):
 		return self.wallDetector.detectWalls()
