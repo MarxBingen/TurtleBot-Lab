@@ -34,26 +34,25 @@ class TBMap:
 		print "Position:", self.posX-self.size, self.posY-self.size
 		print "Heading:",self.heading
 
-	def updatePosition(self):
+	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
-			self.posY = self.posY + 1
+			self.posY = self.posY + step
 		elif self.heading is SimpleHeading.SUED:
-			self.posY = self.posY - 1
+			self.posY = self.posY - step
 		elif self.heading is SimpleHeading.WEST:
-			self.posX = self.posX - 1
+			self.posX = self.posX - step
 		elif self.heading is SimpleHeading.OST:
-			self.posX = self.posX + 1
+			self.posX = self.posX + step
 
 
 	def broadcastMapToOdomTF(self):
 		#broadcast map to odom transform
 		t = TransformStamped()
-		t.child_frame_id = "odom"
+		t.child_frame_id = "base_footprint"
 		t.header.frame_id = "map"
 		t.header.stamp = rospy.Time.now()
-		t.transform.translation.x=(self.posX-self.size)*self.raster
-		t.transform.translation.y=(self.posY-self.size)*self.raster
-		
+		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
+		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
 		t.transform.rotation = Quaternion(*tf_conversions.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading)))
 		#t.transform.rotation.w = 1.0 
 		self.tfPub.sendTransform(t)
