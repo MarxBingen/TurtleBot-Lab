@@ -20,11 +20,11 @@ class SimpleHeading(Enum):
 	def yaw(heading):
 		y = 0
 		if (heading is SimpleHeading.NORD):
-			y = 0
+			y = math.pi/float(2.0)
 		elif heading is SimpleHeading.WEST:
-			y=4.71238898
+			y = math.pi 
 		elif heading is SimpleHeading.SUED:
-			y=3.14159265
+			y= -math.pi/float(2.0)
 		elif heading is SimpleHeading.OST:
-			y=1.57079633
+			y= -math.pi
 		return y

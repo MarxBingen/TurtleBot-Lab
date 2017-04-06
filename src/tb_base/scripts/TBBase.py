@@ -50,9 +50,9 @@ class TBBase:
 				twist.angular.z=0
 			self.movePub.publish(twist)
 		#self.movePub.publish(Twist())
-		self.map.updatePosition()
+		self.map.updatePosition(1)
 		self.map.printPosition()
-		self.map.updateMap(self.pruefeFelder())
+		#self.map.updateMap(self.pruefeFelder())
 
 	def drehe(self,richtung='links'):
 		z = self.turnSpeed
@@ -95,7 +95,10 @@ class TBBase:
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
 		yaw = math.degrees(math.atan2(s3,s4))+180
 		self.heading = yaw
+		#permanent TF broadcasten
 		self.map.broadcastMapToOdomTF()
 
 	def pruefeFelder(self):
-		return self.wallDetector.detectWalls()
+		w = self.wallDetector.detectWalls()
+		self.map.updateMap(w)
+		return w
