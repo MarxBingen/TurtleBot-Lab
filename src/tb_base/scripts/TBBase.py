@@ -4,6 +4,7 @@ import rospy
 import sys
 import time
 import math
+import numpy
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
@@ -18,12 +19,16 @@ class TBBase:
 	speed = 0.2 #0,2 meter pro sek
 	turnSpeed = math.radians(30) #45 grad pro sekunde
 	heading = 0
+	initialIMUset = False
+	initialIMU = 0
 	magSub = None
 	wallDetector = None
 	map = None
 
-	def __init__(self):
+	def __init__(self,gridSize=0.5):
 		print "Starte System..."
+		print "GridSize=",gridSize
+		self.gridSize=gridSize
 		rospy.init_node('TurtleBotLab')
 		self.map = TBMap(10,self.gridSize)
 		self.wallDetector = WallDetection()
@@ -43,9 +48,9 @@ class TBBase:
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
 				if wc == 'rechts':
-					twist.angular.z=0.58
+					twist.angular.z=0.5
 				if wc == 'links':
-					twist.angular.z=-0.58
+					twist.angular.z=-0.5
 			else:
 				twist.angular.z=0
 			self.movePub.publish(twist)
@@ -59,29 +64,44 @@ class TBBase:
 		w = self.heading
 		new_heading = self.heading+90
 		if richtung == 'rechts':
+			print "Drehe Rechts"
 			z = -self.turnSpeed
 			new_heading = self.heading-90
 			self.map.turn('rechts')
 		else:
+			print "Drehe Links"
 			self.map.turn('links')
 		if new_heading <0:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
+		print "Old:", new_heading
+		new_heading = self.korrigiereHeading(new_heading)
+		print "New:", new_heading
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
-		print "neu:" + str(new_heading)
-		print "akt:" + str(self.heading)
-		nh = new_heading
 		while not rospy.is_shutdown() and (turned == False):
 			self.movePub.publish(twist)
 			sh = self.heading
-			if (int(sh) == int(nh)):
-				print "Ready"
+			if (int(sh) == int(new_heading)):
 				turned = True
-		self.movePub.publish(Twist())
-		print "Stopped Turning"
+				print "Turn Ready"
+		if not rospy.is_shutdown():
+			self.movePub.publish(Twist())
+		#print "Stopped Turning"
+
+	def korrigiereHeading(self,nh):
+		sd = 360
+		si = -1
+		print "initIMU", self.initialIMU
+		for i in range(0,4):
+			t = abs(nh - (self.initialIMU + (90*i)))
+			print i, t, sd, si
+			if (t < sd):
+				sd = t
+				si = i
+		return self.initialIMU + (90*si)
 
 	def imuCallback(self,data):
 		if rospy.is_shutdown() and not self.magSub is None:
@@ -95,6 +115,9 @@ class TBBase:
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
 		yaw = math.degrees(math.atan2(s3,s4))+180
 		self.heading = yaw
+		if (self.initialIMUset==False):
+			self.initialIMU=yaw
+			self.initialIMUset=True
 		#permanent TF broadcasten
 		self.map.broadcastMapToOdomTF()
 

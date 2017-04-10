@@ -55,7 +55,8 @@ class TBMap:
 		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
 		t.transform.rotation = Quaternion(*tf_conversions.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading)))
 		#t.transform.rotation.w = 1.0 
-		self.tfPub.sendTransform(t)
+		if not rospy.is_shutdown():
+			self.tfPub.sendTransform(t)
 
 	def updateMap(self, feldbelegung):
 		posX=self.posX
@@ -89,4 +90,5 @@ class TBMap:
 		self.map.header.frame_id = "map"
 		self.map.header.stamp = rospy.Time.now()
 		self.map.data=self.mapArray
-		self.mapPub.publish(self.map) 
+		if not rospy.is_shutdown():
+			self.mapPub.publish(self.map) 

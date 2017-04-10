@@ -6,15 +6,18 @@ import time
 import cv2
 
 if __name__ == '__main__':
-	base=TBBase()
+	base=TBBase(0.35)
 	#base.vorwaerts()
 	#base.drehe()
 	#time.sleep(2)
 	#base.drehe()
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
-		if p.mitte == 'Frei':
+		if p.rechts == 'Frei':
+			base.drehe('rechts')
+			base.vorwaerts()
+		elif p.mitte == 'Frei':
 			base.vorwaerts()
 		else:
-			base.drehe()
+			base.drehe('links')
 		time.sleep(0.5)

@@ -32,15 +32,15 @@ class WallDetection:
 		for l in range (680,810):
 			if (self.lastScan.ranges[l]<rasterSize):
 				leftC = leftC + 1
-			if (self.lastScan.ranges[l]<0.25):
+			if (self.lastScan.ranges[l]<0.20):
 				leftClose = leftClose + 1
 		for c in range(380,420):
-			if (self.lastScan.ranges[c]<(rasterSize/2)):
+			if (self.lastScan.ranges[c]<0.20):
 				centerC = centerC + 1
 		for r in range(1,130):
 			if (self.lastScan.ranges[r]<rasterSize):
 				rightC = rightC + 1
-			if (self.lastScan.ranges[r]<0.25):
+			if (self.lastScan.ranges[r]<0.20):
 				rightClose = rightClose + 1
 		left = 'Frei' if leftC<20 else 'Belegt'
 		right = 'Frei' if rightC<20 else 'Belegt'
