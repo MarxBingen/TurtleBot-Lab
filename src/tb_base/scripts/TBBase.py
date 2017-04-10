@@ -34,7 +34,7 @@ class TBBase:
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
-		self.movePub = rospy.Publisher('cmd_vel_mux/input/safety_controller',Twist, queue_size=1)
+		self.movePub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
 
 	def vorwaerts(self):
 		print "Fahre vorwaerts"
@@ -52,7 +52,7 @@ class TBBase:
 				if wc == 'links':
 					twist.angular.z=-0.5
 			else:
-				twist.angular.z=0
+				twist.angular.z=0.0
 			self.movePub.publish(twist)
 		#self.movePub.publish(Twist())
 		self.map.updatePosition(1)
@@ -96,12 +96,18 @@ class TBBase:
 		si = -1
 		print "initIMU", self.initialIMU
 		for i in range(0,4):
-			t = abs(nh - (self.initialIMU + (90*i)))
+			s = self.initialIMU + ( 90*i)
+			if s >=360:
+				s = s - 360
+			t = abs(nh - s)
 			print i, t, sd, si
 			if (t < sd):
 				sd = t
 				si = i
-		return self.initialIMU + (90*si)
+		result = self.initialIMU + (90*si)
+		if result>=360:
+			result=result-360
+		return result
 
 	def imuCallback(self,data):
 		if rospy.is_shutdown() and not self.magSub is None:

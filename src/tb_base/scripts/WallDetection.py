@@ -21,26 +21,30 @@ class WallDetection:
 
 	def detectWalls(self,rasterSize=0.5):
 		#vorne  380 - 420 = 40
-		#links  680 - 810 = 130
-		#rechts 1 - 130 = 130
+		#links  690 - 805 = 130
+		#links annaehreung 615-730
+		#rechts 15 - 140 = 130
+		#rechts annaeherung 50-165
 		leftC = 0
 		centerC = 0
 		rightC = 0
 		#Counter fuer zu nah dran
 		leftClose = 0
 		rightClose = 0
-		for l in range (680,810):
+		for l in range (690,805):
 			if (self.lastScan.ranges[l]<rasterSize):
 				leftC = leftC + 1
-			if (self.lastScan.ranges[l]<0.20):
+		for lc in range(615,730):
+			if (self.lastScan.ranges[lc]<0.20):
 				leftClose = leftClose + 1
 		for c in range(380,420):
 			if (self.lastScan.ranges[c]<0.20):
 				centerC = centerC + 1
-		for r in range(1,130):
+		for r in range(15,140):
 			if (self.lastScan.ranges[r]<rasterSize):
 				rightC = rightC + 1
-			if (self.lastScan.ranges[r]<0.20):
+		for rc in range(50,165):
+			if (self.lastScan.ranges[rc]<0.20):
 				rightClose = rightClose + 1
 		left = 'Frei' if leftC<20 else 'Belegt'
 		right = 'Frei' if rightC<20 else 'Belegt'
