@@ -43,7 +43,7 @@ class TBBase:
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		while not rospy.is_shutdown() and (time.time()< t_end):
-			if self.pruefeFelder().mitte=='Belegt':
+			if self.pruefeFelder(False).mitte=='Belegt':
 				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
@@ -57,38 +57,38 @@ class TBBase:
 		#self.movePub.publish(Twist())
 		self.map.updatePosition(1)
 		self.map.printPosition()
+		self.pruefeFelder()
 		#self.map.updateMap(self.pruefeFelder())
 
 	def drehe(self,richtung='links'):
 		z = self.turnSpeed
 		w = self.heading
-		new_heading = self.heading+90
+		new_heading = w+90
+		print "Drehe ",richtung
 		if richtung == 'rechts':
-			print "Drehe Rechts"
 			z = -self.turnSpeed
-			new_heading = self.heading-90
-			self.map.turn('rechts')
-		else:
-			print "Drehe Links"
-			self.map.turn('links')
-		if new_heading <0:
+			new_heading = w-90
+		if new_heading < 0:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
-		print "Old:", new_heading
+		print "Original:", new_heading
 		new_heading = self.korrigiereHeading(new_heading)
-		print "New:", new_heading
+		print "Korrigiert:", new_heading
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
 		while not rospy.is_shutdown() and (turned == False):
-			self.movePub.publish(twist)
+			if not rospy.is_shutdown():
+				self.movePub.publish(twist)
 			sh = self.heading
 			if (int(sh) == int(new_heading)):
 				turned = True
 				print "Turn Ready"
+		#damit stoppt die Drehung sofort
 		if not rospy.is_shutdown():
 			self.movePub.publish(Twist())
+		self.map.turned(richtung)
 		#print "Stopped Turning"
 
 	def korrigiereHeading(self,nh):
@@ -125,9 +125,11 @@ class TBBase:
 			self.initialIMU=yaw
 			self.initialIMUset=True
 		#permanent TF broadcasten
-		self.map.broadcastMapToOdomTF()
+		if not rospy.is_shutdown():
+			self.map.broadcastMapToOdomTF()
 
-	def pruefeFelder(self):
+	def pruefeFelder(self,updateMap = True):
 		w = self.wallDetector.detectWalls()
-		self.map.updateMap(w)
+		if (updateMap):
+			self.map.updateMap(w)
 		return w

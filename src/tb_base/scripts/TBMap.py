@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import rospy
-import tf_conversions
-from tf2_ros import TransformBroadcaster
+import math
+import tf
+import tf2_ros
 
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
@@ -24,9 +25,9 @@ class TBMap:
 		self.posX = size
 		self.posY = size
 		self.mapPub = rospy.Publisher('map',OccupancyGrid,queue_size=1)
-		self.tfPub = TransformBroadcaster()
+		self.tfPub = tf2_ros.TransformBroadcaster()
 
-	def turn(self,richtung):
+	def turned(self,richtung):
 		self.heading = SimpleHeading.turn(self.heading,richtung)
 		print self.heading
 
@@ -53,8 +54,11 @@ class TBMap:
 		t.header.stamp = rospy.Time.now()
 		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
-		t.transform.rotation = Quaternion(*tf_conversions.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading)))
-		#t.transform.rotation.w = 1.0 
+		q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
+		t.transform.rotation.x=q[0]
+		t.transform.rotation.y=q[1]
+		t.transform.rotation.z=q[2]
+		t.transform.rotation.w=q[3]
 		if not rospy.is_shutdown():
 			self.tfPub.sendTransform(t)
 
