@@ -13,8 +13,8 @@ def imuCallback(data):
 	qz = data.orientation.z
 	qw = data.orientation.w
 	s3 = 2 * ((qw*qz) + (qx*qy))
-	s4 = 1 - 2 * ((qy*qy) + (qz*qz))
-	yaw = math.degrees(math.atan2(s3,s4))+180
+	s4 = 1 - (2 * ((qy*qy) + (qz*qz)))
+	yaw = 360 - (math.degrees(math.atan2(s3,s4))+180)
 	print yaw
 
 
