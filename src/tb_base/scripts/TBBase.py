@@ -30,7 +30,7 @@ class TBBase:
 		print "GridSize=",gridSize
 		self.gridSize=gridSize
 		rospy.init_node('TurtleBotLab')
-		self.map = TBMap(10,self.gridSize)
+		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
@@ -43,7 +43,7 @@ class TBBase:
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		while not rospy.is_shutdown() and (time.time()< t_end):
-			if self.pruefeFelder(False).mitte=='Belegt':
+			if self.pruefeFelder().mitte=='Belegt':
 				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
@@ -57,7 +57,7 @@ class TBBase:
 		#self.movePub.publish(Twist())
 		self.map.updatePosition(1)
 		self.map.printPosition()
-		self.pruefeFelder()
+		self.pruefeFelder(True)
 		#self.map.updateMap(self.pruefeFelder())
 
 	def drehe(self,richtung='links'):
@@ -89,18 +89,17 @@ class TBBase:
 		if not rospy.is_shutdown():
 			self.movePub.publish(Twist())
 		self.map.turned(richtung)
+		self.pruefeFelder(True)
 		#print "Stopped Turning"
 
 	def korrigiereHeading(self,nh):
 		sd = 360
 		si = -1
-		print "initIMU", self.initialIMU
 		for i in range(0,4):
 			s = self.initialIMU + ( 90*i)
 			if s >=360:
 				s = s - 360
 			t = abs(nh - s)
-			print i, t, sd, si
 			if (t < sd):
 				sd = t
 				si = i
@@ -128,8 +127,9 @@ class TBBase:
 		if not rospy.is_shutdown():
 			self.map.broadcastMapToOdomTF()
 
-	def pruefeFelder(self,updateMap = True):
+	def pruefeFelder(self,updateMap = False):
 		w = self.wallDetector.detectWalls()
 		if (updateMap):
+			print "Pruefe Belegungen"
 			self.map.updateMap(w)
 		return w

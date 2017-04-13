@@ -22,10 +22,10 @@ class SimpleHeading(Enum):
 		if (heading is SimpleHeading.NORD):
 			y = math.pi/2.0
 		elif heading is SimpleHeading.WEST:
-			y = -math.pi/2.0
+			y = math.pi
 		elif heading is SimpleHeading.SUED:
-			y= -math.pi
+			y= -math.pi/2.0
 		elif heading is SimpleHeading.OST:
-			y= math.pi/2.0
+			y= 2*math.pi
 		return y
 

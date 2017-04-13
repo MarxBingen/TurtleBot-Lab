@@ -6,7 +6,7 @@
   
   <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
   <node pkg="nodelet" type="nodelet" name="mobile_base" args="load kobuki_node/KobukiNodelet mobile_base_nodelet_manager">
-    <rosparam file="$(find kobuki_node)/param/base.yaml" command="load"/>
+    <rosparam file="$(find tb_base)/launch/param/base.yaml" command="load"/>
     <param name="device_port" value="$(arg serialport)" />
     <param name="odom_frame" value="odom" />
     <param name="base_frame" value="base_footprint" />
