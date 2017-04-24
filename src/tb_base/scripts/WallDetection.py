@@ -39,21 +39,23 @@ class WallDetection:
 		#Counter fuer zu nah dran
 		leftClose = 0
 		rightClose = 0
-		for l in range (690,805):
-			if (self.lastScan.ranges[l]<0.40):
-				leftC = leftC + 1
-		for lc in range(615,750):
-			if (self.lastScan.ranges[lc]<0.20):
-				leftClose = leftClose + 1
-		for c in range(380,420):
-			if (self.lastScan.ranges[c]<0.20):
-				centerC = centerC + 1
-		for r in range(15,140):
-			if (self.lastScan.ranges[r]<0.40):
-				rightC = rightC + 1
-		for rc in range(50,165):
-			if (self.lastScan.ranges[rc]<0.20):
-				rightClose = rightClose + 1
+		maxIndex = len(self.lastScan.ranges)
+		for x in range(0, maxIndex):
+			if (x > 690 and x < 805):
+				if (self.lastScan.ranges[x]<0.40):
+					leftC = leftC + 1
+			if (x > 615 and x < 750):
+				if (self.lastScan.ranges[x]<0.20):
+					leftClose = leftClose + 1
+			if (x > 380 and x < 420):
+				if (self.lastScan.ranges[x]<0.15):
+					centerC = centerC + 1
+			if (x > 15 and x < 140):
+				if (self.lastScan.ranges[x]<0.40):
+					rightC = rightC + 1
+			if (x > 50 and x < 165):
+				if (self.lastScan.ranges[x]<0.20):
+					rightClose = rightClose + 1
 		left = 'Frei' if leftC<60 else 'Belegt'
 		right = 'Frei' if rightC<60 else 'Belegt'
 		center = 'Frei' if centerC < 5 else 'Belegt'
@@ -67,5 +69,7 @@ class WallDetection:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
+		#print leftC,centerC,rightC
+		#print leftClose, rightClose
 		return self.lastWallInfo
 

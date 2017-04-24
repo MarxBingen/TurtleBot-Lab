@@ -28,6 +28,8 @@ if __name__ == '__main__':
 		z = zufall(v)
 		if (z=='mitte'):
 			base.vorwaerts()
+		elif (z=='sackgasse'):
+			base.drehe('links')
 		else:
 			base.drehe(z)
 			base.vorwaerts()

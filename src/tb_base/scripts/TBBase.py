@@ -48,8 +48,7 @@ class TBBase:
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			if self.pruefeFelder().mitte=='Belegt':
 				print "STOP"
-				twist.linear.x=0.0
-				self.movePub.publish(twist)
+				self.movePub.publish(Twist())
 				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
