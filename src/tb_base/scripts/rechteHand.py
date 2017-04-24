@@ -7,7 +7,7 @@ import time
 import cv2
 
 if __name__ == '__main__':
-	base=TBBase(0.35)
+	base=TBBase(0.40)
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
 		if p.rechts == 'Frei':
