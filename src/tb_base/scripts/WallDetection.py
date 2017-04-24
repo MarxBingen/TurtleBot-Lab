@@ -6,18 +6,26 @@ from collections import namedtuple
 
 class WallDetection:
 
-	lastScan = LaserScan()
 	laserSub = None
-	lastWallInfo = None
+	lastScan = None
 	#definition WallInfo
 	WallInfo = namedtuple('WallInfo','links,mitte,rechts')
+	lastWallInfo = WallInfo('Frei','Frei','Frei')
 	#wand annaeherung links oder rechts
 	wallToClose = ''
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
-		self.laserSub = rospy.Subscriber('/scan', LaserScan,self.laserCallback)
+		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 
+	def wallGetsCloser(self):
+		return self.wallToClose
+
+	def laserCallback(self,data):
+		if (rospy.is_shutdown() and not self.laserSub is None):
+			self.laserSub.unregister()
+			return
+		self.lastScan = data
 
 	def detectWalls(self):
 		#vorne  380 - 420 = 40
@@ -38,7 +46,7 @@ class WallDetection:
 			if (self.lastScan.ranges[lc]<0.20):
 				leftClose = leftClose + 1
 		for c in range(380,420):
-			if (self.lastScan.ranges[c]<0.25):
+			if (self.lastScan.ranges[c]<=0.20):
 				centerC = centerC + 1
 		for r in range(15,140):
 			if (self.lastScan.ranges[r]<0.40):
@@ -46,12 +54,12 @@ class WallDetection:
 		for rc in range(50,165):
 			if (self.lastScan.ranges[rc]<0.20):
 				rightClose = rightClose + 1
-		left = 'Frei' if leftC<40 else 'Belegt'
-		right = 'Frei' if rightC<40 else 'Belegt'
+		left = 'Frei' if leftC<60 else 'Belegt'
+		right = 'Frei' if rightC<60 else 'Belegt'
 		center = 'Frei' if centerC < 5 else 'Belegt'
 		#muss vertauscht werden, da scanner ueber kopf
-		result = self.WallInfo(right,center,left)
-		#wand annaeherung 40 lasermessungen zu nah...dann annaehrung
+		self.lastWallInfo = self.WallInfo(right,center,left)
+		#wand annaeherung 20 lasermessungen zu nah...dann annaehrung
 		if (rightClose > 20 or leftClose > 20):
 			if (rightClose > leftClose):
 				self.wallToClose = 'links'
@@ -59,15 +67,5 @@ class WallDetection:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
-		return result
-
-	def wallGetsCloser(self):
-		return self.wallToClose
-
-
-	def laserCallback(self,data):
-		if (rospy.is_shutdown() and not self.laserSub is None):
-			self.laserSub.unregister()
-			return
-		self.lastScan=data
+		return self.lastWallInfo
 

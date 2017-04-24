@@ -42,8 +42,10 @@ class TBBase:
 		twist.linear.x = self.speed
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
+		startHeading = int(self.heading)
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			if self.pruefeFelder().mitte=='Belegt':
+				print "STOP"
 				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
@@ -52,9 +54,9 @@ class TBBase:
 				if wc == 'links':
 					twist.angular.z=-0.5
 			else:
-				twist.angular.z=0.0
+				twist.angular.z = self.keepStraight(startHeading)
 			self.movePub.publish(twist)
-		#self.movePub.publish(Twist())
+		#self.internalZeroAngular()
 		self.map.updatePosition(1)
 		self.map.printPosition()
 		self.pruefeFelder(True)
@@ -72,9 +74,7 @@ class TBBase:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
-		print "Original:", new_heading
 		new_heading = self.korrigiereHeading(new_heading)
-		print "Korrigiert:", new_heading
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
@@ -86,11 +86,30 @@ class TBBase:
 				turned = True
 				print "Turn Ready"
 		#damit stoppt die Drehung sofort
-		if not rospy.is_shutdown():
-			self.movePub.publish(Twist())
+		self.internalZeroAngular()
 		self.map.turned(richtung)
 		self.pruefeFelder(True)
 		#print "Stopped Turning"
+
+	#sorgt dafuer, dass nach einer Drehung wieder geradeaus faehrt
+	def internalZeroAngular(self):
+		twist = Twist()
+		if not rospy.is_shutdown():
+			twist.angular.z = 0.1
+			for i in range(0,100):
+				self.movePub.publish(Twist())
+			twist.angular.z = -0.1
+			for i in range(0,100):
+				self.movePub.publish(Twist())
+
+	def keepStraight(self, sh):
+		ah = int(self.heading)
+		if ah > sh:
+			return self.turnspeed
+		elif ah < sh:
+			return -self.turnSpeed
+		return 0.0
+
 
 	def korrigiereHeading(self,nh):
 		sd = 360
