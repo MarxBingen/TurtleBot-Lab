@@ -15,6 +15,7 @@ if __name__ == '__main__':
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
 		if p.rechts == 'Frei' and p.links == 'Frei':
+			print "Links und Rechts Frei"
 			if p.mitte == 'Frei':
 				maxL=3
 			else:
@@ -28,9 +29,11 @@ if __name__ == '__main__':
 			else:
 				base.vorwaerts()
 		elif p.rechts == 'Frei':
+			print "Nur Rechts Frei"
 			base.drehe('rechts')
 			base.vorwaerts()
 		elif p.mitte == 'Frei':
+			print "Nur Vorne Frei"
 			base.vorwaerts()
 		else:
 			base.drehe('links')

@@ -30,7 +30,7 @@ class TBBase:
 		print "GridSize=",gridSize
 		self.gridSize=gridSize
 		rospy.init_node('TurtleBotLab')
-		self.map = TBMap(10,self.gridSize)
+		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
@@ -57,50 +57,49 @@ class TBBase:
 		#self.movePub.publish(Twist())
 		self.map.updatePosition(1)
 		self.map.printPosition()
+		self.pruefeFelder(True)
 		#self.map.updateMap(self.pruefeFelder())
 
 	def drehe(self,richtung='links'):
 		z = self.turnSpeed
 		w = self.heading
-		new_heading = self.heading+90
+		new_heading = w+90
+		print "Drehe ",richtung
 		if richtung == 'rechts':
-			print "Drehe Rechts"
 			z = -self.turnSpeed
-			new_heading = self.heading-90
-			self.map.turn('rechts')
-		else:
-			print "Drehe Links"
-			self.map.turn('links')
-		if new_heading <0:
+			new_heading = w-90
+		if new_heading < 0:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
-		print "Old:", new_heading
+		print "Original:", new_heading
 		new_heading = self.korrigiereHeading(new_heading)
-		print "New:", new_heading
+		print "Korrigiert:", new_heading
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
 		while not rospy.is_shutdown() and (turned == False):
-			self.movePub.publish(twist)
+			if not rospy.is_shutdown():
+				self.movePub.publish(twist)
 			sh = self.heading
 			if (int(sh) == int(new_heading)):
 				turned = True
 				print "Turn Ready"
+		#damit stoppt die Drehung sofort
 		if not rospy.is_shutdown():
 			self.movePub.publish(Twist())
+		self.map.turned(richtung)
+		self.pruefeFelder(True)
 		#print "Stopped Turning"
 
 	def korrigiereHeading(self,nh):
 		sd = 360
 		si = -1
-		print "initIMU", self.initialIMU
 		for i in range(0,4):
 			s = self.initialIMU + ( 90*i)
 			if s >=360:
 				s = s - 360
 			t = abs(nh - s)
-			print i, t, sd, si
 			if (t < sd):
 				sd = t
 				si = i
@@ -125,9 +124,12 @@ class TBBase:
 			self.initialIMU=yaw
 			self.initialIMUset=True
 		#permanent TF broadcasten
-		self.map.broadcastMapToOdomTF()
+		if not rospy.is_shutdown():
+			self.map.broadcastMapToOdomTF()
 
-	def pruefeFelder(self):
+	def pruefeFelder(self,updateMap = False):
 		w = self.wallDetector.detectWalls()
-		self.map.updateMap(w)
+		if (updateMap):
+			print "Pruefe Belegungen"
+			self.map.updateMap(w)
 		return w
