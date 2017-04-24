@@ -6,8 +6,12 @@ from TBRandom import zufall
 import time
 import cv2
 
+from blinkstick import blinkstick
+
 if __name__ == '__main__':
-	base=TBBase(0.35)
+	base=TBBase(0.40)
+	for bs in blinkstick.find_all():
+		bs.set_color(name='green')
 	#base.vorwaerts()
 	#base.drehe() #
 	#time.sleep(2)
@@ -26,4 +30,7 @@ if __name__ == '__main__':
 			base.vorwaerts()
 		else:
 			base.drehe(z)
+			base.vorwaerts()
 		time.sleep(0.5)
+	for bs in blinkstick.find_all():
+		bs.set_color(name='red')

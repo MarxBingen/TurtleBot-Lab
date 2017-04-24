@@ -9,6 +9,8 @@ import numpy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
 
+from blinkstick import blinkstick
+
 from WallDetection import WallDetection
 from TBMap import TBMap
 
@@ -46,6 +48,8 @@ class TBBase:
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			if self.pruefeFelder().mitte=='Belegt':
 				print "STOP"
+				twist.linear.x=0.0
+				self.movePub.publish(twist)
 				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
@@ -57,7 +61,6 @@ class TBBase:
 				twist.angular.z = 0.0
 				#twist.angular.z = self.keepStraight(startHeading)
 			self.movePub.publish(twist)
-		#self.internalZeroAngular()
 		self.map.updatePosition(1)
 		self.map.printPosition()
 		self.pruefeFelder(True)
