@@ -10,5 +10,5 @@ if __name__ == '__main__':
 	base=TBBase(0.35)
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
-		print p
-		time.sleep(0.5)
+		print p,"\r",
+		time.sleep(0.1)

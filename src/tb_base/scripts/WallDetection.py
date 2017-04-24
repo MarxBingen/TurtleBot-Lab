@@ -46,7 +46,7 @@ class WallDetection:
 			if (self.lastScan.ranges[lc]<0.20):
 				leftClose = leftClose + 1
 		for c in range(380,420):
-			if (self.lastScan.ranges[c]<=0.20):
+			if (self.lastScan.ranges[c]<0.20):
 				centerC = centerC + 1
 		for r in range(15,140):
 			if (self.lastScan.ranges[r]<0.40):
@@ -60,7 +60,7 @@ class WallDetection:
 		#muss vertauscht werden, da scanner ueber kopf
 		self.lastWallInfo = self.WallInfo(right,center,left)
 		#wand annaeherung 20 lasermessungen zu nah...dann annaehrung
-		if (rightClose > 20 or leftClose > 20):
+		if (rightClose > 10 or leftClose > 10):
 			if (rightClose > leftClose):
 				self.wallToClose = 'links'
 			else:

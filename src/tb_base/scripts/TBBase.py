@@ -17,7 +17,7 @@ class TBBase:
 	movePub = None
 	gridSize = 0.5
 	speed = 0.2 #0,2 meter pro sek
-	turnSpeed = math.radians(30) #45 grad pro sekunde
+	turnSpeed = math.radians(45) #45 grad pro sekunde
 	heading = 0
 	initialIMUset = False
 	initialIMU = 0
@@ -29,7 +29,7 @@ class TBBase:
 		print "Starte System..."
 		print "GridSize=",gridSize
 		self.gridSize=gridSize
-		rospy.init_node('TurtleBotLab')
+		rospy.init_node('TurtleBotLab',anonymous = True)
 		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
@@ -54,7 +54,8 @@ class TBBase:
 				if wc == 'links':
 					twist.angular.z=-0.5
 			else:
-				twist.angular.z = self.keepStraight(startHeading)
+				twist.angular.z = 0.0
+				#twist.angular.z = self.keepStraight(startHeading)
 			self.movePub.publish(twist)
 		#self.internalZeroAngular()
 		self.map.updatePosition(1)
@@ -104,10 +105,10 @@ class TBBase:
 
 	def keepStraight(self, sh):
 		ah = int(self.heading)
-		if ah > sh:
-			return self.turnspeed
-		elif ah < sh:
-			return -self.turnSpeed
+		if ah > sh+3:
+			return -0.25
+		elif ah < sh-3:
+			return +0.25
 		return 0.0
 
 
