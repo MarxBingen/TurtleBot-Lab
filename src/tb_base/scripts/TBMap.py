@@ -29,11 +29,12 @@ class TBMap:
 
 	def turned(self,richtung):
 		self.heading = SimpleHeading.turn(self.heading,richtung)
-		print self.heading
+		#print self.heading
 
 	def printPosition(self):
-		print "Position:", self.posX-self.size, self.posY-self.size
-		print "Heading:",self.heading
+		pass
+		#print "Position:", self.posX-self.size, self.posY-self.size
+		#print "Heading:",self.heading
 
 	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
