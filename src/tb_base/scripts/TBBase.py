@@ -9,8 +9,6 @@ import numpy
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu
 
-from blinkstick import blinkstick
-
 from WallDetection import WallDetection
 from TBMap import TBMap
 
