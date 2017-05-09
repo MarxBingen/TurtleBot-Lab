@@ -24,16 +24,17 @@ class TBMap:
 		#Ausgangsposition auf null setzen
 		self.posX = size
 		self.posY = size
-		self.mapPub = rospy.Publisher('map',OccupancyGrid,queue_size=1)
+		self.mapPub = rospy.Publisher('mapLab',OccupancyGrid,queue_size=1)
 		self.tfPub = tf2_ros.TransformBroadcaster()
 
 	def turned(self,richtung):
 		self.heading = SimpleHeading.turn(self.heading,richtung)
-		print self.heading
+		#print self.heading
 
 	def printPosition(self):
-		print "Position:", self.posX-self.size, self.posY-self.size
-		print "Heading:",self.heading
+		pass
+		#print "Position:", self.posX-self.size, self.posY-self.size
+		#print "Heading:",self.heading
 
 	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
@@ -50,7 +51,7 @@ class TBMap:
 		#broadcast map to odom transform
 		t = TransformStamped()
 		t.child_frame_id = "base_footprint"
-		t.header.frame_id = "map"
+		t.header.frame_id = "mapLab"
 		t.header.stamp = rospy.Time.now()
 		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
@@ -91,7 +92,7 @@ class TBMap:
 		self.map.info.height=self.size*2
 		self.map.info.origin=Pose()
 		self.map.info.origin.position=Point(-self.size*self.raster,-self.size*self.raster,0)
-		self.map.header.frame_id = "map"
+		self.map.header.frame_id = "mapLab"
 		self.map.header.stamp = rospy.Time.now()
 		self.map.data=self.mapArray
 		if not rospy.is_shutdown():

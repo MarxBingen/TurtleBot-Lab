@@ -1,15 +1,6 @@
 <launch>
 	
-	<include file="$(find tb_base)/launch/includes/minimal.launch.xml"/>
-
-	<include file="$(find tb_base)/launch/includes/sick_tim571_2050101.launch.xml"/>
-	<!--
-	<include file="$(find tb_base)/launch/includes/gmapping.launch.xml"/>
-	-->
-
-	<!--
 	<include file="$(find tb_base)/launch/includes/freenect_rgb.launch.xml"/> 
-	-->
 <!--	
 	<include file="$(find tb_base)/launch/includes/move_base.launch.xml"/>
 	<node pkg="daniels" name="Player" type="player.py" output="screen" />
