@@ -7,6 +7,7 @@ c = cv2.VideoCapture(0)
 detected = False
 while(detected is not True):
 
+	print "Running"
     # Take each frame
     _, img = c.read()
     img = cv2.flip(img,5)
