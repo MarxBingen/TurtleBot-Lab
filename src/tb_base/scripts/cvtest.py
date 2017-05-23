@@ -6,36 +6,34 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-class image_converter:
+class templateMatcher:
 
 	def __init__(self):
-		self.image_pub = rospy.Publisher("image_topic_2",Image)
 		self.bridge = CvBridge()
+		self.template = cv2.imread('rot.png',1)
 		self.image_sub = rospy.Subscriber("camera/rgb/image_raw",Image,self.callback)
+		self.detected = False
 
 	def callback(self,data):
 		try:
-			cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+			img = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
 			print(e)
-		(rows,cols,channels) = cv_image.shape
-		if cols > 60 and rows > 60 :
-			cv2.circle(cv_image, (50,50), 50, 255)
-		#cv2.imshow("Image window", cv_image)
-		#cv2.waitKey(3)
-		try:
-			self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
-		except CvBridgeError as e:
-			print(e)
+		res = cv2.matchTemplate(img, self.template, cv2.TM_CCORR_NORMED)
+		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
+		if min_val > 0.05:
+			self.detected = True
+		else:
+			self.detected = False
+		print self.detected
 
 def main(args):
-	ic = image_converter()
-	rospy.init_node('image_converter', anonymous=True)
+	rospy.init_node('templateMatcher', anonymous=True)
+	tm = templateMatcher()
 	try:
 		rospy.spin()
 	except KeyboardInterrupt:
 		print("Shutting down")
-	cv2.destroyAllWindows()
 
 if __name__ == '__main__':
 	main(sys.argv)
