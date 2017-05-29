@@ -11,7 +11,7 @@ class templateMatcher:
 	def __init__(self):
 		self.bridge = CvBridge()
 		self.template = cv2.imread('rot.png',1)
-		self.image_sub = rospy.Subscriber("camera/rgb/image_raw",Image,self.callback)
+		self.image_sub = rospy.Subscriber("camera/rgb/image_color",Image,self.callback)
 		self.detected = False
 
 	def callback(self,data):
@@ -21,11 +21,17 @@ class templateMatcher:
 			print(e)
 		res = cv2.matchTemplate(img, self.template, cv2.TM_CCORR_NORMED)
 		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
-		if min_val > 0.05:
+		print min_val, max_val
+		if min_val > 0.5:
 			self.detected = True
 		else:
 			self.detected = False
 		print self.detected
+		tl = max_loc
+		br = (tl[0] + 100, tl[1]+100)
+		cv2.rectangle(img,tl,br,255,2)
+		cv2.imshow('test',img)
+		cv2.waitKey(5)
 
 def main(args):
 	rospy.init_node('templateMatcher', anonymous=True)
