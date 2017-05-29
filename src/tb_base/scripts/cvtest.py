@@ -11,6 +11,9 @@ class templateMatcher:
 	def __init__(self):
 		self.bridge = CvBridge()
 		self.template = cv2.imread('rot.png',1)
+		self.lower_color = np.array([50,0,0], dtype=np.uint8)
+		self.upper_color = np.array([255,0,0], dtype=np.uint8)
+
 		self.image_sub = rospy.Subscriber("camera/rgb/image_color",Image,self.callback)
 		self.detected = False
 
@@ -29,6 +32,8 @@ class templateMatcher:
 		print self.detected
 		tl = max_loc
 		br = (tl[0] + 100, tl[1]+100)
+		mask = cv2.inRange(hsv, self.lower_color, self.upper_color)
+		cv2.imshow('mask',mask)
 		cv2.rectangle(img,tl,br,255,2)
 		cv2.imshow('test',img)
 		cv2.waitKey(5)
