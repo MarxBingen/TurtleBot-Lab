@@ -34,7 +34,7 @@ class templateMatcher:
 		print self.detected
 		tl = max_loc
 		br = (tl[0] + 100, tl[1]+100)
-		cv2.rectangle(img,tl,br,255,2)
+		cv2.rectangle(img,tl,br,180,2)
 		cv2.imshow('mask',img)
 		#cv2.imshow('test',img)
 		cv2.waitKey(5)
