@@ -16,27 +16,21 @@ class templateMatcher:
 		self.upper_color = np.array([165,255,200], dtype=np.uint8)
 		self.image_sub = rospy.Subscriber("camera/rgb/image_color",Image,self.callback)
 		self.detected = False
+		self.orb = cv2.ORB_create()
+		self.bf = cv2.BFMatcher(cv2.NORM_HAMMING,crossCheck=True)
 
 	def callback(self,data):
 		try:
 			img = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
 			print(e)
-		width,height = self.template.shape[:2]
-		#img = img[height/2:height,0:width]
-		res = cv2.matchTemplate(img, self.template, cv2.TM_CCOEFF_NORMED)
-		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
-		print min_val, max_val
-		if max_val > 0.5:
-			self.detected = True
-		else:
-			self.detected = False
-		print self.detected
-		posX = max_loc[0]+(width/2)
-		posY = max_loc[1]+(height/2)
-		cv2.circle(img,(posX,posY),20,255,2)
-		cv2.imshow('mask',img)
-		#cv2.imshow('test',img)
+		#gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+		kp1, des1 = self.orb.detectAndCompute(img,None)
+		kp2, des2 = self.orb.detectAndCompute(self.template,None)
+		matches = self.bf.match(des1,des2)
+		matches = sorted(matches,key = lambda x:x.distance)
+		img3 = cv2.drawMatches(img,kp1,self.template,kp2,matches[:10],None,flags=2)
+		cv2.imshow('img',img3)
 		cv2.waitKey(5)
 
 def main(args):
