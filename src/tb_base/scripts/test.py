@@ -9,23 +9,18 @@ import cv2
 from blinkstick import blinkstick
 
 if __name__ == '__main__':
-	base=TBBase(0.40)
+	base=TBBase(0.38)
 	for bs in blinkstick.find_all():
 		bs.set_color(name='green')
-	#base.vorwaerts()
-	#base.drehe() #
-	#time.sleep(2)
-	#base.drehe()
 	while not rospy.is_shutdown():
-		p = base.pruefeFelder()
-		z = zufallBelegung(p)
-		if (z=='mitte'):
-			base.vorwaerts()
-		elif (z=='sackgasse'):
-			base.drehe('links')
+		base.drehe('links')
+		if base.pruefeObject()== True:
+			for bs in blinkstick.find_all():
+				bs.set_color(name='green')
 		else:
-			base.drehe(z)
-			base.vorwaerts()
+			for bs in blinkstick.find_all():
+				bs.set_color(name='red')
 		time.sleep(0.5)
+
 	for bs in blinkstick.find_all():
-		bs.set_color(name='red')
+		bs.set_color(name='off')

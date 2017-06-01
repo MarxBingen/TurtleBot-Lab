@@ -7,10 +7,11 @@ import math
 import numpy
 
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import Imu
+from sensor_msgs.msg import Imu, Image
 
 from WallDetection import WallDetection
 from TBMap import TBMap
+from TBPoiDetect import TBPoiDetect
 
 class TBBase:
 
@@ -32,6 +33,7 @@ class TBBase:
 		rospy.init_node('TurtleBotLab',anonymous = True)
 		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
+		self.objectDetector = TBPoiDetect('kreuz.png')
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
 		self.movePub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
@@ -153,3 +155,9 @@ class TBBase:
 			print "Pruefe Belegungen"
 			self.map.updateMap(w)
 		return w
+
+
+	def pruefeObject(self):
+		data = rospy.wait_for_message('/camera/rgb/image_color',Image,2.0)
+		detected = self.objectDetector.detect(data)
+		return detected

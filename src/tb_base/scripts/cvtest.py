@@ -26,7 +26,7 @@ class templateMatcher:
 		#img = img[height/2:height,0:width]
 		res = cv2.matchTemplate(img, self.template, cv2.TM_CCOEFF_NORMED)
 		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
-		print min_val, max_val
+		print max_val
 		# match level
 		if max_val > 0.5:
 			self.detected = True
