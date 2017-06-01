@@ -33,7 +33,7 @@ class TBBase:
 		rospy.init_node('TurtleBotLab',anonymous = True)
 		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
-		self.objectDetector = TBPoiDetect('kreuz.png')
+		self.objectDetector = TBPoiDetect()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
 		time.sleep(1)
 		self.movePub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
