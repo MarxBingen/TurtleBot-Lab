@@ -20,6 +20,7 @@ class TBPoiDetect:
 		res = cv2.matchTemplate(img, self.template, cv2.TM_CCOEFF_NORMED)
 		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
 		# match level
+		print "Match:", max_val
 		if max_val > 0.8:
 			detected = True
 		else:

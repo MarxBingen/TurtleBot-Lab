@@ -14,7 +14,8 @@ if __name__ == '__main__':
 		bs.set_color(name='green')
 	while not rospy.is_shutdown():
 		base.drehe('links')
-		if base.pruefeObject()== True:
+		detected = base.pruefeObject()
+		if detected == True:
 			print "Bild erkannt"
 			for bs in blinkstick.find_all():
 				bs.set_color(name='green')
