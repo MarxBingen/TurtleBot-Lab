@@ -158,6 +158,6 @@ class TBBase:
 
 
 	def pruefeObject(self):
-		data = rospy.wait_for_message('/camera/rgb/image_color',Image,2.0)
+		data = rospy.wait_for_message('/camera/rgb/image_color',Image,10.0)
 		detected = self.objectDetector.detect(data)
 		return detected
