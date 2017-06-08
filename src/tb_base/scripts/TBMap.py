@@ -16,6 +16,8 @@ class TBMap:
 	heading = SimpleHeading.NORD
 	map = OccupancyGrid()
 	mapPub = None
+	knoten = []
+	kanten = []
 
 	def __init__(self,size,raster):
 		self.size=size
@@ -66,6 +68,8 @@ class TBMap:
 	def updateMap(self, feldbelegung):
 		posX=self.posX
 		posY=self.posY
+		updateDijkstraStuff(posX,posY,feldbelegung)
+		#MAP kram
 		s=self.size*2
 		self.mapArray[posY*s+posX]=0
 		if self.heading is SimpleHeading.NORD:
@@ -85,6 +89,55 @@ class TBMap:
 			self.mapArray[(posY+1 )*s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
 			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
 		self.updateOccupancyGrid()
+		
+	def updateDijkstraStuff(px,py,feldbelegung):
+		cKnot = str(px + "," + "py)
+		lknot = ""
+		mknot = ""
+		rknot = ""
+		#temp bezeichner erstellen
+		if self.heading is SimpleHeading.NORD:
+			mknot = str((posY+1)+"," + posX)
+			lknot = str(posY+"," + (posX-1))
+			rknot = str(posY+","+ (posX+1))
+		elif self.heading is SimpleHeading.SUED:
+			mknot = str((posY-1 )+","+posX)
+			lknot = str(posY+"," (posX+1))
+			rknot = str(posY+","+ (posX-1))
+		elif self.heading is SimpleHeading.WEST:
+			mknot = str(posY+","+ (posX-1))
+			lknot = str((posY-1 )+","+posX)
+			rknot = str((posY+1 )+","+posX)
+		elif self.heading is SimpleHeading.OST:
+			mknot = str(posY+","+(posX+1))
+			lknot = str((posY+1 )+","+posX)
+			rknot = str((posY-1 )+","+posX)
+		#knoten und kanten aktualiseiren
+		if not lknot in self.knoten:
+				self.knoten.append(lknot)
+		if not mknot in self.knoten:
+				self.knoten.append(mknot)
+		if not rknot in self.knoten:
+				self.knoten.append(rknot)
+		if feldbelegung.mitte == 'Frei':
+			if not (cKnot,mknot,1) in self.kanten:
+				self.kanten.append((cKnot,mknot,1))
+		else:
+			if (cKnot,mknot,1) in self.kanten:
+				self.kanten.remove((cKnot,mknot,1))
+		if feldbelegung.rechts == 'Frei':
+			if not (cKnot,rknot,1) in self.kanten:
+				self.kanten.append((cKnot,rknot,1))
+		else:
+			if (cKnot,rknot,1) in self.kanten:
+				self.kanten.remove((cKnot,rknot,1))
+		if feldbelegung.links == 'Frei':
+			if not (cKnot,lknot,1) in self.kanten:
+				self.kanten.append((cKnot,lknot,1))
+		else:
+			if (cKnot,lknot,1) in self.kanten:
+				self.kanten.remove((cKnot,lknot,1))
+				
 
 	def updateOccupancyGrid(self):
 		self.map.info.resolution=self.raster
