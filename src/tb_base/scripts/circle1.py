@@ -8,8 +8,8 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
 #cap = cv2.VideoCapture(0)
-c = cv2.VideoCapture(0)
-detected = False
+#c = cv2.VideoCapture(0)
+#detected = False
 
 class test:
 	def __init__(self):
