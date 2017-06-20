@@ -28,18 +28,17 @@ class test:
 			imgC = self.bridge.imgmsg_to_cv2(data, "rgb8")
 		except CvBridgeError as e:
 			print(e)
-		hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
- 		# construct a mask for the color "green", then perform
+		hsv = cv2.cvtColor(imgC, cv2.COLOR_BGR2HSV)
+		# construct a mask for the color "green", then perform
 		# a series of dilations and erosions to remove any small
 		# blobs left in the mask
-		mask = cv2.inRange(hsv, greenLower, greenUpper)
+		mask = cv2.inRange(hsv, self.greenLower, self.greenUpper)
 		mask = cv2.erode(mask, None, iterations=2)
 		mask = cv2.dilate(mask, None, iterations=2)
 		# find contours in the mask and initialize the current
 		# (x, y) center of the ball
 		cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
 		center = None
- 
 		# only proceed if at least one contour was found
 		if len(cnts) > 0:
 			# find the largest contour in the mask, then use
@@ -49,9 +48,9 @@ class test:
 			((x, y), radius) = cv2.minEnclosingCircle(c)
 			M = cv2.moments(c)
 			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
- 
 			# only proceed if the radius meets a minimum size
-			if radius > 10:
+			print radius
+			if radius > 100 and radius < 150:
 				# draw the circle and centroid on the frame,
 				# then update the list of tracked points
 				cv2.circle(imgC, (int(x), int(y)), int(radius),(0, 255, 255), 2)
