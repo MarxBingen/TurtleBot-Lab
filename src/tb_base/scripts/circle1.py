@@ -32,13 +32,12 @@ class test:
 		#mask = cv2.inRange(mask,self.lower_color,self.upper_color)
 		#img = cv2.cvtColor(mask,cv2.COLOR_HSV2RGB)
 		#img = cv2.cvtColor(mask,cv2.COLOR_RGB2GRAY)
-		circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT,1,100,param1=50,param2=50,minRadius=80,maxRadius=280)
+		circles = cv2.HoughCircles(gray,cv2.HOUGH_GRADIENT,1,10,param1=40,param2=50,minRadius=80,maxRadius=160)
 		if (circles is not None):
-			print len(circles)
 			circles = np.uint16(np.around(circles))
 			for i in circles[0,:]:
-				cv2.circle(imgC,(i[0],i[1]),i[2],(0,255,0),2)
-		cv2.imshow('detected circles',imgC)
+				cv2.circle(gray,(i[0],i[1]),i[2],(0,255,0),2)
+		cv2.imshow('detected circles',gray)
 		cv2.waitKey(5)
 
 if __name__ == '__main__':
