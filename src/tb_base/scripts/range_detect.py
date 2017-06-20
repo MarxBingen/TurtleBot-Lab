@@ -9,8 +9,13 @@
 
 import cv2
 import argparse
+import rospy
+import numpy as np
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge, CvBridgeError
 from operator import xor
 
+bridge = None
 
 def callback(value):
     pass
@@ -61,7 +66,8 @@ def get_trackbar_values(range_filter):
 
 def main():
     args = get_arguments()
-
+	image_sub = rospy.Subscriber("camera/rgb/image_color",Image,imCallback)
+	bridge = CvBridge()
     range_filter = args['filter'].upper()
 
     if args['image']:
@@ -76,32 +82,31 @@ def main():
 
     setup_trackbars(range_filter)
 
-    while True:
-        if args['webcam']:
-            ret, image = camera.read()
+	
+def imCallback(data):
+	try:
+		image = bridge.imgmsg_to_cv2(data, "bgr8")
+	except CvBridgeError as e:
+		print(e)
+    if range_filter == 'RGB':
+		frame_to_thresh = image.copy()
+    else:
+		frame_to_thresh = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    v1_min, v2_min, v3_min, v1_max, v2_max, v3_max = get_trackbar_values(range_filter)
 
-            if not ret:
-                break
+    thresh = cv2.inRange(frame_to_thresh, (v1_min, v2_min, v3_min), (v1_max, v2_max, v3_max))
 
-            if range_filter == 'RGB':
-                frame_to_thresh = image.copy()
-            else:
-                frame_to_thresh = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    if args['preview']:
+        preview = cv2.bitwise_and(image, image, mask=thresh)
+        cv2.imshow("Preview", preview)
+    else:
+        cv2.imshow("Original", image)
+        cv2.imshow("Thresh", thresh)
 
-        v1_min, v2_min, v3_min, v1_max, v2_max, v3_max = get_trackbar_values(range_filter)
-
-        thresh = cv2.inRange(frame_to_thresh, (v1_min, v2_min, v3_min), (v1_max, v2_max, v3_max))
-
-        if args['preview']:
-            preview = cv2.bitwise_and(image, image, mask=thresh)
-            cv2.imshow("Preview", preview)
-        else:
-            cv2.imshow("Original", image)
-            cv2.imshow("Thresh", thresh)
-
-        if cv2.waitKey(1) & 0xFF is ord('q'):
-            break
+    if cv2.waitKey(1) & 0xFF is ord('q'):
+         break
 
 
 if __name__ == '__main__':
+	rospy.init_node('range_detector', anonymous=True)
     main()
