@@ -68,7 +68,7 @@ class TBMap:
 	def updateMap(self, feldbelegung):
 		posX=self.posX
 		posY=self.posY
-		updateDijkstraStuff(posX,posY,feldbelegung)
+		self.updateDijkstraStuff(posX,posY,feldbelegung)
 		#MAP kram
 		s=self.size*2
 		self.mapArray[posY*s+posX]=0
@@ -89,9 +89,9 @@ class TBMap:
 			self.mapArray[(posY+1 )*s+ posX  ]= 0 if feldbelegung.links == 'Frei' else 100
 			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
 		self.updateOccupancyGrid()
-		
+
 	def updateDijkstraStuff(px,py,feldbelegung):
-		cKnot = str(px + "," + "py)
+		cKnot = str(px + "," + py)
 		lknot = ""
 		mknot = ""
 		rknot = ""

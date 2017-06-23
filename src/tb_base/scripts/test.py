@@ -11,17 +11,20 @@ from blinkstick import blinkstick
 if __name__ == '__main__':
 	base=TBBase(0.38)
 	for bs in blinkstick.find_all():
-		bs.set_color(name='green')
+		bs.set_color(name='yellow')
 	while not rospy.is_shutdown():
 		base.drehe('links')
 		detected = base.pruefeObject()
-		if detected == True:
-			print "Bild erkannt"
+		if detected == "Green":
+			print "Gruen erkannt"
 			for bs in blinkstick.find_all():
 				bs.set_color(name='green')
-		else:
+		elif detected == "Red":
 			for bs in blinkstick.find_all():
 				bs.set_color(name='red')
+		else:
+			for bs in blinkstick.find_all():
+				bs.set_color(name='yellow')
 		time.sleep(0.5)
 
 	for bs in blinkstick.find_all():
