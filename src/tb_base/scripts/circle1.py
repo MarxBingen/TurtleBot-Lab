@@ -17,8 +17,8 @@ class test:
 		#Low und High sind in R G B !
 		self.redLow = np.array([47,0,0], dtype=np.uint8)
 		self.redHigh = np.array([255,16,14], dtype=np.uint8)
-		self.greenLow = np.array([0,0,0], dtype=np.uint)
-		self.greenHigh = np.array([22,255,42], dtype=np.uint)
+		self.greenLow = np.array([0,0,0], dtype=np.uint8)
+		self.greenHigh = np.array([22,255,42], dtype=np.uint8)
 
 		self.image_sub = rospy.Subscriber("camera/rgb/image_color",Image,self.callback)
 		#self.image_sub = rospy.Subscriber("camera/rgb/image_mono",Image,self.callback)
@@ -50,7 +50,8 @@ class test:
 			print "Red:", radius
 			if radius > 100 and radius < 150:
 				cv2.circle(imgO, (int(x), int(y)), int(radius),(0, 255, 255), 2)
-		cv2.imshow('detected circles',maskGreen)
+		cv2.drawContours(imgO,cntsGreen, -1,(0,255,0),3)
+		cv2.imshow('detected circles',imgO)
 		cv2.waitKey(1)
 
 if __name__ == '__main__':
