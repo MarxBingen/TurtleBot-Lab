@@ -90,28 +90,28 @@ class TBMap:
 			self.mapArray[(posY-1 )*s+ posX  ]= 0 if feldbelegung.rechts == 'Frei' else 100
 		self.updateOccupancyGrid()
 
-	def updateDijkstraStuff(px,py,feldbelegung):
-		cKnot = str(px + "," + py)
+	def updateDijkstraStuff(self,px,py,feldbelegung):
+		cKnot = str(px) + "," + str(py)
 		lknot = ""
 		mknot = ""
 		rknot = ""
 		#temp bezeichner erstellen
 		if self.heading is SimpleHeading.NORD:
-			mknot = str((posY+1)+"," + posX)
-			lknot = str(posY+"," + (posX-1))
-			rknot = str(posY+","+ (posX+1))
+			mknot = str(py+1) + "," + str(px)
+			lknot = str(py)   + "," + str(px-1)
+			rknot = str(py)   + "," + str(px+1)
 		elif self.heading is SimpleHeading.SUED:
-			mknot = str((posY-1 )+","+posX)
-			lknot = str(posY+"," (posX+1))
-			rknot = str(posY+","+ (posX-1))
+			mknot = str(py-1) + "," + str(px)
+			lknot = str(py)   + "," + str(px+1)
+			rknot = str(py)   + "," + str(px-1)
 		elif self.heading is SimpleHeading.WEST:
-			mknot = str(posY+","+ (posX-1))
-			lknot = str((posY-1 )+","+posX)
-			rknot = str((posY+1 )+","+posX)
+			mknot = str(py)   + "," + str(px-1)
+			lknot = str(py-1) + "," + str(px)
+			rknot = str(py+1) + "," + str(px)
 		elif self.heading is SimpleHeading.OST:
-			mknot = str(posY+","+(posX+1))
-			lknot = str((posY+1 )+","+posX)
-			rknot = str((posY-1 )+","+posX)
+			mknot = str(py)   + "," + str(px+1)
+			lknot = str(py+1) + "," + str(px)
+			rknot = str(py-1) + "," + str(px)
 		#knoten und kanten aktualiseiren
 		if not lknot in self.knoten:
 				self.knoten.append(lknot)
@@ -137,7 +137,7 @@ class TBMap:
 		else:
 			if (cKnot,lknot,1) in self.kanten:
 				self.kanten.remove((cKnot,lknot,1))
-				
+
 
 	def updateOccupancyGrid(self):
 		self.map.info.resolution=self.raster
