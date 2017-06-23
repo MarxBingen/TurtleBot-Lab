@@ -39,31 +39,18 @@ class test:
 		center = None
 		# only proceed if at least one contour was found
 		if len(cntsGreen) > 0:
-			# find the largest contour in the mask, then use
-			# it to compute the minimum enclosing circle and
-			# centroid
 			c = max(cntsGreen, key=cv2.contourArea)
 			((x, y), radius) = cv2.minEnclosingCircle(c)
-			#M = cv2.moments(c)
-			#center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			# only proceed if the radius meets a minimum size
+			print "Green:", radius
 			if radius > 100 and radius < 150:
 				cv2.circle(imgO, (int(x), int(y)), int(radius),(0, 255, 255), 2)
-				#cv2.circle(imgO, center, 5, (0, 0, 255), -1)
-		# only proceed if at least one contour was found
 		if len(cntsRed) > 0:
-			# find the largest contour in the mask, then use
-			# it to compute the minimum enclosing circle and
-			# centroid
 			c = max(cntsRed, key=cv2.contourArea)
 			((x, y), radius) = cv2.minEnclosingCircle(c)
-			M = cv2.moments(c)
-			center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
-			# only proceed if the radius meets a minimum size
+			print "Red:", radius
 			if radius > 100 and radius < 150:
 				cv2.circle(imgO, (int(x), int(y)), int(radius),(0, 255, 255), 2)
-				cv2.circle(imgO, center, 5, (0, 0, 255), -1)
-		cv2.imshow('detected circles',imgO)
+		cv2.imshow('detected circles',maskGreen)
 		cv2.waitKey(1)
 
 if __name__ == '__main__':

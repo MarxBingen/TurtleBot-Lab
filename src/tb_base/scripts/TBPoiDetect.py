@@ -13,7 +13,7 @@ class TBPoiDetect:
 
 		self.redLow = np.array([47,0,0], dtype=np.uint8)
 		self.redHigh = np.array([255,16,14], dtype=np.uint8)
-		self.greenLow = np.array([0,0,0], dtype=np.uint)
+		self.greenLow = np.array([0,37,0], dtype=np.uint)
 		self.greenHigh = np.array([22,255,42], dtype=np.uint)
 
 	def detect(self,data):
