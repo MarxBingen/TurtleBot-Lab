@@ -15,6 +15,7 @@ if __name__ == '__main__':
 	while not rospy.is_shutdown():
 		base.drehe('links')
 		detected = base.pruefeObject()
+		print detected
 		if detected == "Green":
 			print "Gruen erkannt"
 			for bs in blinkstick.find_all():

@@ -13,8 +13,8 @@ class TBPoiDetect:
 
 		self.redLow = np.array([47,0,0], dtype=np.uint8)
 		self.redHigh = np.array([255,16,14], dtype=np.uint8)
-		self.greenLow = np.array([0,0,0], dtype=np.uint)
-		self.greenHigh = np.array([22,255,42], dtype=np.uint)
+		self.greenLow = np.array([0,0,0], dtype=np.uint8)
+		self.greenHigh = np.array([22,255,42], dtype=np.uint8)
 
 	def detect(self,data):
 		try:
@@ -38,11 +38,13 @@ class TBPoiDetect:
 			c = max(cntsGreen, key=cv2.contourArea)
 			((x, y), radius) = cv2.minEnclosingCircle(c)
 			# Radius muss passen
+			print "Gruen max Radius:", radius
 			if radius > 100 and radius < 150:
 				detectedColor = "Green"
 		if len(cntsRed) > 0:
 			c = max(cntsRed, key=cv2.contourArea)
 			((x, y), radius) = cv2.minEnclosingCircle(c)
+			print "Rot max Radius:", radius
 			if radius > 100 and radius < 150:
 				detectedColor = "Red"
 		return detectedColor
