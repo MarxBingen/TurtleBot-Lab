@@ -14,15 +14,32 @@ class TBPoiDetect:
 
 	def detect(self,data):
 		try:
-			img = self.bridge.imgmsg_to_cv2(data, "bgr8")
+			imgO = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
 			print(e)
-		res = cv2.matchTemplate(img, self.template, cv2.TM_CCOEFF_NORMED)
-		min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(res)
-		# match level
-		print "Match:", max_val
-		if max_val > 0.8:
-			detected = True
-		else:
-			detected = False
-		return detected
+			return "Error"
+		imgC = cv2.cvtColor(imgO, cv2.COLOR_BGR2RGB)
+		#bild optimierungen
+		imgC = cv2.erode(imgC, None, iterations=2)
+		imgC = cv2.dilate(imgC, None, iterations=2)
+		#red green maskierungen
+		maskRed = cv2.inRange(imgC,self.redLow,self.redHigh)
+		maskGreen = cv2.inRange(imgC,self.greenLow,self.greenHigh)
+		#Konturen finden
+		cntsGreen = cv2.findContours(maskGreen, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+		cntsRed = cv2.findContours(maskRed, cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)[-2]
+		detectedColor = None
+		if len(cntsGreen) > 0:
+			#die groeste kontur finden
+			c = max(cntsGreen, key=cv2.contourArea)
+			((x, y), radius) = cv2.minEnclosingCircle(c)
+			# Radius muss passen
+			if radius > 100 and radius < 150:
+				detectedColor = "Green"
+		if len(cntsRed) > 0:
+			c = max(cntsRed, key=cv2.contourArea)
+			((x, y), radius) = cv2.minEnclosingCircle(c)
+			if radius > 100 and radius < 150:
+				detectedColor = "Red"
+		return detectedColor
+		
