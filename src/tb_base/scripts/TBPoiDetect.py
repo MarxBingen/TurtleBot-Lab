@@ -8,9 +8,13 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class TBPoiDetect:
 
-	def __init__(self,imagefile):
+	def __init__(self):
 		self.bridge = CvBridge()
-		self.template = cv2.imread(imagefile,1)
+
+		self.redLow = np.array([47,0,0], dtype=np.uint8)
+		self.redHigh = np.array([255,16,14], dtype=np.uint8)
+		self.greenLow = np.array([0,0,0], dtype=np.uint)
+		self.greenHigh = np.array([22,255,42], dtype=np.uint)
 
 	def detect(self,data):
 		try:
