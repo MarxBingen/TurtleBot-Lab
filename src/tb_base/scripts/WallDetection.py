@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import math
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
@@ -16,9 +17,9 @@ class WallDetection:
 	wallToClose = ''
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
-	frontArea = FeldInfo(0.0,0.35,-0.15,0.15)
-	leftArea = FeldInfo(-0.35,0.0,-0.55,-0.15)
-	rightArea = FeldInfo(-0.35,0.0,0.15,0.55)
+	frontArea = FeldInfo(0.0  , 0.15,-0.15, 0.15)
+	leftArea =  FeldInfo(-0.35,-0.05,-0.30,-0.18)
+	rightArea = FeldInfo(-0.35,-0.05, 0.18, 0.30)
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
@@ -32,9 +33,9 @@ class WallDetection:
 
 	def publishAreas(self):
 		#front
-		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.35,y=0.15),Point32(x=0.35,y=-0.15)]
-		left = [Point32(y=-0.15),Point32(y=-0.55),Point32(x=-0.35,y=-0.55),Point32(x=-0.35,y=-0.15)]
-		right = [Point32(y=0.15),Point32(y=0.55),Point32(x=-0.35,y=0.55),Point32(x=-0.35,y=0.15)]
+		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.15,y=0.15),Point32(x=0.15,y=-0.15)]
+		left = [Point32(x=-0.05,y=-0.18),Point32(x=-0.05,y=-0.30),Point32(x=-0.35,y=-0.30),Point32(x=-0.35,y=-0.18)]
+		right = [Point32(x=-0.05,y=0.18),Point32(x=-0.05,y=0.30),Point32(x=-0.35,y=0.30),Point32(x=-0.35,y=0.18)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -57,6 +58,36 @@ class WallDetection:
 			return
 		self.publishAreas()
 		self.lastScan = data
+		counter = 0
+		#performance verbessern durch funktions-referenzen
+		p2k = self.polar2Koord
+		pIr = self.pointInRect
+		#counter fuer Felder
+		inLeft  = 0
+		inFront = 0
+		inRight = 0
+		for r in data.ranges:
+			x,y = p2k(data.angle_min+(counter*data.angle_increment),r)
+			if (pIr(x,y,self.leftArea)):
+				inLeft = inLeft + 1
+			if (pIr(x,y,self.frontArea)):
+				inFront = inFront + 1
+			if (pIr(x,y,self.rightArea)):
+				inRight = inRight + 1
+			counter = counter + 1
+		print inLeft,inFront,inRight
+
+	def polar2Koord(self,phi,range):
+		x = range * math.cos(phi)
+		y = range * math.sin(phi)
+		return x,y
+
+	def pointInRect(self,x,y,rect):
+		if x > rect.x1 and x < rect.x2:
+			if y > rect.y1 and y < rect.y2:
+				return True
+		return False
+
 
 	def detectWalls(self):
 		#vorne  380 - 420 = 40
