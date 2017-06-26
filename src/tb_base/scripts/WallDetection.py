@@ -18,10 +18,14 @@ class WallDetection:
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
 	frontArea = FeldInfo(0.0  , 0.15,-0.10, 0.10)
-	leftArea =  FeldInfo(-0.35,-0.05,-0.30,-0.18)
-	rightArea = FeldInfo(-0.35,-0.05, 0.18, 0.30)
-	frontLeftArea = FeldInfo(0.0,0.2,-0.18,-0.05)
-	frontRightArea = FeldInfo(0.0,0.2,0.05,0.18)
+	leftArea =  FeldInfo(-0.25,-0.0,-0.30,-0.18)
+	rightArea = FeldInfo(-0.25,-0.0, 0.18, 0.30)
+	frontLeftArea = FeldInfo(0.0,0.2,-0.18,-0.10)
+	frontRightArea = FeldInfo(0.0,0.2,0.10,0.18)
+
+	anglesCalculated = False
+	sinAngles = []
+	cosAngles = []
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
@@ -32,16 +36,28 @@ class WallDetection:
 		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 
+	def calcAngles(self, numAngles,minAngle,angleIncrement):
+		self.anglesCalculated = True
+		for i in range(numAngles):
+			self.sinAngles.append(math.sin(minAngle+(angleIncrement*i)))
+			self.cosAngles.append(math.cos(minAngle+(angleIncrement*i)))
+		print "Sin/Cos-Tabellen erstellt"
+
 	def wallGetsCloser(self):
 		return self.wallToClose
 
 	def publishAreas(self):
 		#front
-		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.15,y=0.15),Point32(x=0.15,y=-0.15)]
-		left = [Point32(x=-0.05,y=-0.18),Point32(x=-0.05,y=-0.30),Point32(x=-0.35,y=-0.30),Point32(x=-0.35,y=-0.18)]
-		right = [Point32(x=-0.05,y=0.18),Point32(x=-0.05,y=0.30),Point32(x=-0.35,y=0.30),Point32(x=-0.35,y=0.18)]
-		fleft = [Point32(x=0.0,y=-0.18),Point32(x=0.0,y=-0.05),Point32(x=0.2,y=-0.05),Point32(x=0.2,y=-0.18)]
-		fright = [Point32(x=0.0,y=0.05),Point32(x=0.0,y=0.18),Point32(x=0.2,y=0.18),Point32(x=0.2,y=0.05)]
+		fa = self.frontArea
+		front = [Point32(y=fa.y1),Point32(y=fa.y2),Point32(x=fa.x2,y=fa.y2),Point32(x=fa.x2,y=fa.y1)]
+		la = self.leftArea
+		left = [Point32(x=la.x1,y=la.y1),Point32(x=la.x2,y=la.y1),Point32(x=la.x2,y=la.y2),Point32(x=la.x1,y=la.y2)]
+		ra = self.rightArea
+		right = [Point32(x=ra.x1,y=ra.y1),Point32(x=ra.x2,y=ra.y1),Point32(x=ra.x2,y=ra.y2),Point32(x=ra.x1,y=ra.y2)]
+		fla = self.frontLeftArea
+		fra = self.frontRightArea
+		fleft = [Point32(x=fla.x1,y=fla.y1),Point32(x=fla.x1,y=fla.y2),Point32(x=fla.x2,y=fla.y2),Point32(x=fla.x2,y=fla.y1)]
+		fright = [Point32(x=fra.x1,y=fra.y1),Point32(x=fra.x1,y=fra.y2),Point32(x=fra.x2,y=fra.y2),Point32(x=fra.x2,y=fra.y1)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -74,9 +90,17 @@ class WallDetection:
 			return
 		self.publishAreas()
 		self.lastScan = data
+		if self.anglesCalculated == False:
+			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
+		self.internal_detectWalls2(data)
 
-	def detectWalls2(self):
-		data = self.lastScan
+	#def detectWalls2(self):
+	#	return self.lastWallInfo
+
+	def internal_detectWalls2(self,data):
+		if self.anglesCalculated == False:
+			print "No Scan recieved"
+			return
 		counter = 0
 		#performance verbessern durch funktions-referenzen
 		p2k = self.polar2Koord
@@ -88,7 +112,7 @@ class WallDetection:
 		inFrontLeft = 0
 		inFrontRight = 0
 		for r in data.ranges:
-			x,y = p2k(data.angle_min+(counter*data.angle_increment),r)
+			x,y = p2k(counter,r)
 			if (pIr(x,y,self.leftArea)):
 				inLeft = inLeft + 1
 			if (pIr(x,y,self.frontArea)):
@@ -104,7 +128,7 @@ class WallDetection:
 		right = 'Frei' if inRight < 10 else 'Belegt'
 		front = 'Frei' if inFront < 10 else 'Belegt'
 		#print inFrontLeft,inFrontRight
-		if front == 'Frei' and ((inFrontLeft > 10) or (inFrontRight > 10)):
+		if ((inFrontLeft > 10) != (inFrontRight > 10)):
 			if (inFrontLeft > inFrontRight):
 				self.wallToClose = 'links'
 			else:
@@ -113,11 +137,10 @@ class WallDetection:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
 		#print self.lastWallInfo, self.wallToClose
-		return self.lastWallInfo
 
-	def polar2Koord(self,phi,range):
-		x = range * math.cos(phi)
-		y = range * math.sin(phi)
+	def polar2Koord(self,angleIndex,range):
+		x = range * self.cosAngles[angleIndex]
+		y = range * self.sinAngles[angleIndex]
 		return x,y
 
 	def pointInRect(self,x,y,rect):
