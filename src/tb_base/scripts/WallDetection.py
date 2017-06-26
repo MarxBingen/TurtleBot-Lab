@@ -17,11 +17,11 @@ class WallDetection:
 	wallToClose = ''
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
-	frontArea = FeldInfo(0.0  , 0.15,-0.15, 0.15)
+	frontArea = FeldInfo(0.0  , 0.15,-0.10, 0.10)
 	leftArea =  FeldInfo(-0.35,-0.05,-0.30,-0.18)
 	rightArea = FeldInfo(-0.35,-0.05, 0.18, 0.30)
-	frontLeftArea = FeldInfo(0.0,0.4,-0.15,-0.05)
-	frontRightArea = FeldInfo(0.0,0.4,0.05,0.15)
+	frontLeftArea = FeldInfo(0.0,0.2,-0.18,-0.05)
+	frontRightArea = FeldInfo(0.0,0.2,0.05,0.18)
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
@@ -40,8 +40,8 @@ class WallDetection:
 		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.15,y=0.15),Point32(x=0.15,y=-0.15)]
 		left = [Point32(x=-0.05,y=-0.18),Point32(x=-0.05,y=-0.30),Point32(x=-0.35,y=-0.30),Point32(x=-0.35,y=-0.18)]
 		right = [Point32(x=-0.05,y=0.18),Point32(x=-0.05,y=0.30),Point32(x=-0.35,y=0.30),Point32(x=-0.35,y=0.18)]
-		fleft = [Point32(x=0.0,y=-0.15),Point32(x=0.0,y=-0.05),Point32(x=0.4,y=-0.05),Point32(x=0.4,y=-0.15)]
-		fright = [Point32(x=0.0,y=0.05),Point32(x=0.0,y=0.15),Point32(x=0.4,y=0.15),Point32(x=0.4,y=0.05)]
+		fleft = [Point32(x=0.0,y=-0.18),Point32(x=0.0,y=-0.05),Point32(x=0.2,y=-0.05),Point32(x=0.2,y=-0.18)]
+		fright = [Point32(x=0.0,y=0.05),Point32(x=0.0,y=0.18),Point32(x=0.2,y=0.18),Point32(x=0.2,y=0.05)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -103,15 +103,17 @@ class WallDetection:
 		left  = 'Frei' if inLeft  < 10 else 'Belegt'
 		right = 'Frei' if inRight < 10 else 'Belegt'
 		front = 'Frei' if inFront < 10 else 'Belegt'
-		print inFrontLeft,inFrontRight
-		if not (inFrontLeft > 10) = (leftClose > 10):
-			if (inFrontLeft > InFrontRight):
+		#print inFrontLeft,inFrontRight
+		if front == 'Frei' and ((inFrontLeft > 10) or (inFrontRight > 10)):
+			if (inFrontLeft > inFrontRight):
 				self.wallToClose = 'links'
 			else:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
+		#print self.lastWallInfo, self.wallToClose
+		return self.lastWallInfo
 
 	def polar2Koord(self,phi,range):
 		x = range * math.cos(phi)
