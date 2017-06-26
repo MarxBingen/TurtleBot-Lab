@@ -20,13 +20,17 @@ class WallDetection:
 	frontArea = FeldInfo(0.0  , 0.15,-0.15, 0.15)
 	leftArea =  FeldInfo(-0.35,-0.05,-0.30,-0.18)
 	rightArea = FeldInfo(-0.35,-0.05, 0.18, 0.30)
+	frontLeftArea = FeldInfo(0.0,0.4,-0.15,-0.05)
+	frontRightArea = FeldInfo(0.0,0.4,0.05,0.15)
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
-		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
 		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
 		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
+		self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
+		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
+		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 
 	def wallGetsCloser(self):
 		return self.wallToClose
@@ -36,6 +40,8 @@ class WallDetection:
 		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.15,y=0.15),Point32(x=0.15,y=-0.15)]
 		left = [Point32(x=-0.05,y=-0.18),Point32(x=-0.05,y=-0.30),Point32(x=-0.35,y=-0.30),Point32(x=-0.35,y=-0.18)]
 		right = [Point32(x=-0.05,y=0.18),Point32(x=-0.05,y=0.30),Point32(x=-0.35,y=0.30),Point32(x=-0.35,y=0.18)]
+		fleft = [Point32(x=0.0,y=-0.15),Point32(x=0.0,y=-0.05),Point32(x=0.4,y=-0.05),Point32(x=0.4,y=-0.15)]
+		fright = [Point32(x=0.0,y=0.05),Point32(x=0.0,y=0.15),Point32(x=0.4,y=0.15),Point32(x=0.4,y=0.05)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -51,6 +57,16 @@ class WallDetection:
 		p.header.stamp = rospy.Time.now()
 		p.polygon.points=right
 		self.areaRight.publish(p)
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=fright
+		self.areaFRight.publish(p)
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=fleft
+		self.areaFLeft.publish(p)
 
 	def laserCallback(self,data):
 		if (rospy.is_shutdown() and not self.laserSub is None):
@@ -58,6 +74,9 @@ class WallDetection:
 			return
 		self.publishAreas()
 		self.lastScan = data
+
+	def detectWalls2(self):
+		data = self.lastScan
 		counter = 0
 		#performance verbessern durch funktions-referenzen
 		p2k = self.polar2Koord
@@ -66,6 +85,8 @@ class WallDetection:
 		inLeft  = 0
 		inFront = 0
 		inRight = 0
+		inFrontLeft = 0
+		inFrontRight = 0
 		for r in data.ranges:
 			x,y = p2k(data.angle_min+(counter*data.angle_increment),r)
 			if (pIr(x,y,self.leftArea)):
@@ -74,8 +95,23 @@ class WallDetection:
 				inFront = inFront + 1
 			if (pIr(x,y,self.rightArea)):
 				inRight = inRight + 1
+			if (pIr(x,y,self.frontRightArea)):
+				inFrontRight = inFrontRight + 1
+			if (pIr(x,y,self.frontLeftArea)):
+				inFrontLeft = inFrontLeft + 1
 			counter = counter + 1
-		print inLeft,inFront,inRight
+		left  = 'Frei' if inLeft  < 10 else 'Belegt'
+		right = 'Frei' if inRight < 10 else 'Belegt'
+		front = 'Frei' if inFront < 10 else 'Belegt'
+		print inFrontLeft,inFrontRight
+		if not (inFrontLeft > 10) = (leftClose > 10):
+			if (inFrontLeft > InFrontRight):
+				self.wallToClose = 'links'
+			else:
+				self.wallToClose = 'rechts'
+		else:
+			self.wallToClose = ''
+		self.lastWallInfo = self.WallInfo(left,front,right)
 
 	def polar2Koord(self,phi,range):
 		x = range * math.cos(phi)

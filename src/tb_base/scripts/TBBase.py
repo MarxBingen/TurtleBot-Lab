@@ -151,7 +151,7 @@ class TBBase:
 			self.map.broadcastMapToOdomTF()
 
 	def pruefeFelder(self,updateMap = False):
-		w = self.wallDetector.detectWalls()
+		w = self.wallDetector.detectWalls2()
 		if (updateMap):
 			print "Pruefe Belegungen"
 			self.map.updateMap(w)
