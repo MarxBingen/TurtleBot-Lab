@@ -46,7 +46,8 @@ class TBBase:
 		wc=''
 		startHeading = int(self.heading)
 		while not rospy.is_shutdown() and (time.time()< t_end):
-			if self.pruefeFelder().mitte=='Belegt':
+			p = self.pruefeFelder()
+			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
 				break

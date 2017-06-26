@@ -2,6 +2,7 @@
 
 import rospy
 from sensor_msgs.msg import LaserScan
+from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
 
 class WallDetection:
@@ -13,18 +14,48 @@ class WallDetection:
 	lastWallInfo = WallInfo('Frei','Frei','Frei')
 	#wand annaeherung links oder rechts
 	wallToClose = ''
+	#linkes feld
+	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
+	frontArea = FeldInfo(0.0,0.35,-0.15,0.15)
+	leftArea = FeldInfo(-0.35,0.0,-0.55,-0.15)
+	rightArea = FeldInfo(-0.35,0.0,0.15,0.55)
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
+		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
+		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
+		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
 
 	def wallGetsCloser(self):
 		return self.wallToClose
+
+	def publishAreas(self):
+		#front
+		front = [Point32(y=-0.15),Point32(y=0.15),Point32(x=0.35,y=0.15),Point32(x=0.35,y=-0.15)]
+		left = [Point32(y=-0.15),Point32(y=-0.55),Point32(x=-0.35,y=-0.55),Point32(x=-0.35,y=-0.15)]
+		right = [Point32(y=0.15),Point32(y=0.55),Point32(x=-0.35,y=0.55),Point32(x=-0.35,y=0.15)]
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=front
+		self.areaFront.publish(p)
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=left
+		self.areaLeft.publish(p)
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=right
+		self.areaRight.publish(p)
 
 	def laserCallback(self,data):
 		if (rospy.is_shutdown() and not self.laserSub is None):
 			self.laserSub.unregister()
 			return
+		self.publishAreas()
 		self.lastScan = data
 
 	def detectWalls(self):
