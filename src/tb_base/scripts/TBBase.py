@@ -82,13 +82,14 @@ class TBBase:
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
-		while not rospy.is_shutdown() and (turned == False):
+		while not rospy.is_shutdown():
 			if not rospy.is_shutdown():
 				self.movePub.publish(twist)
 			sh = self.heading
 			if (int(sh) == int(new_heading)):
 				turned = True
 				print "Turn Ready"
+				break
 		#damit stoppt die Drehung sofort
 		self.internalZeroAngular()
 		self.map.turned(richtung)

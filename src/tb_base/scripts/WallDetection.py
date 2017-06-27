@@ -2,6 +2,7 @@
 
 import rospy
 import math
+#import time
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
@@ -20,6 +21,8 @@ class WallDetection:
 	frontArea = FeldInfo(0.0  , 0.15,-0.10, 0.10)
 	leftArea =  FeldInfo(-0.25,-0.0,-0.30,-0.18)
 	rightArea = FeldInfo(-0.25,-0.0, 0.18, 0.30)
+
+	frontHelpArea = FeldInfo(0.15,0.2,-0.1,0.1)
 	frontLeftArea = FeldInfo(0.0,0.2,-0.18,-0.10)
 	frontRightArea = FeldInfo(0.0,0.2,0.10,0.18)
 
@@ -34,6 +37,7 @@ class WallDetection:
 		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
 		self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
 		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
+		self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 
 	def calcAngles(self, numAngles,minAngle,angleIncrement):
@@ -56,8 +60,10 @@ class WallDetection:
 		right = [Point32(x=ra.x1,y=ra.y1),Point32(x=ra.x2,y=ra.y1),Point32(x=ra.x2,y=ra.y2),Point32(x=ra.x1,y=ra.y2)]
 		fla = self.frontLeftArea
 		fra = self.frontRightArea
+		fha = self.frontHelpArea
 		fleft = [Point32(x=fla.x1,y=fla.y1),Point32(x=fla.x1,y=fla.y2),Point32(x=fla.x2,y=fla.y2),Point32(x=fla.x2,y=fla.y1)]
 		fright = [Point32(x=fra.x1,y=fra.y1),Point32(x=fra.x1,y=fra.y2),Point32(x=fra.x2,y=fra.y2),Point32(x=fra.x2,y=fra.y1)]
+		fha = [Point32(x=fha.x1,y=fha.y1),Point32(x=fha.x1,y=fha.y2),Point32(x=fha.x2,y=fha.y2),Point32(x=fha.x2,y=fha.y1)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -81,15 +87,15 @@ class WallDetection:
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
-		p.polygon.points=fleft
-		self.areaFLeft.publish(p)
+		p.polygon.points=fha
+		self.areaFHelp.publish(p)
 
 	def laserCallback(self,data):
 		if (rospy.is_shutdown() and not self.laserSub is None):
 			self.laserSub.unregister()
 			return
-		self.publishAreas()
-		self.lastScan = data
+		#self.publishAreas()
+		#self.lastScan = data
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
 		self.internal_detectWalls2(data)
@@ -101,6 +107,7 @@ class WallDetection:
 		if self.anglesCalculated == False:
 			print "No Scan recieved"
 			return
+		#startTime = time.time()
 		counter = 0
 		#performance verbessern durch funktions-referenzen
 		p2k = self.polar2Koord
@@ -111,6 +118,7 @@ class WallDetection:
 		inRight = 0
 		inFrontLeft = 0
 		inFrontRight = 0
+		inFrontHelp = 0
 		for r in data.ranges:
 			x,y = p2k(counter,r)
 			if (pIr(x,y,self.leftArea)):
@@ -123,12 +131,14 @@ class WallDetection:
 				inFrontRight = inFrontRight + 1
 			if (pIr(x,y,self.frontLeftArea)):
 				inFrontLeft = inFrontLeft + 1
+			if (pIr(x,y,self.frontHelpArea)):
+				inFrontHelp = inFrontHelp + 1
 			counter = counter + 1
 		left  = 'Frei' if inLeft  < 10 else 'Belegt'
 		right = 'Frei' if inRight < 10 else 'Belegt'
 		front = 'Frei' if inFront < 10 else 'Belegt'
 		#print inFrontLeft,inFrontRight
-		if ((inFrontLeft > 10) != (inFrontRight > 10)):
+		if inFrontHelp < 10 and (inFrontLeft > 10 or inFrontRight > 10):
 			if (inFrontLeft > inFrontRight):
 				self.wallToClose = 'links'
 			else:
@@ -136,6 +146,8 @@ class WallDetection:
 		else:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
+		#endTime = time.time()
+		#print (endTime-startTime)
 		#print self.lastWallInfo, self.wallToClose
 
 	def polar2Koord(self,angleIndex,range):
