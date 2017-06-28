@@ -2,20 +2,17 @@
 
 import rospy
 import math
-import time
 import numpy as np
-import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
-from laser_geometry import LaserProjection
 
-def pointInRect(x,y,rect):
-	if x > rect.x1 and x < rect.x2:
-		if y > rect.y1 and y < rect.y2:
-			return True
-	return False
-
+#optimiert fuer numpy vectorize func
+def pointInRect(x,y,rx1,rx2,ry1,ry2):
+	if x > rx1 and x < rx2:
+		if y > ry1 and y < ry2:
+			return 1
+	return 0
 
 
 class WallDetection:
@@ -41,7 +38,6 @@ class WallDetection:
 	cos_sin_map = None
 
 	def __init__(self):
-		self.laserproj = LaserProjection()
 		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
 		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
 		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
@@ -107,7 +103,6 @@ class WallDetection:
 			return
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
-		startTime = time.time()
 		ranges = np.array(data.ranges)
 		ranges = np.array([ranges,ranges])
 		output = ranges * self.cos_sin_map
@@ -118,27 +113,43 @@ class WallDetection:
 		inFrontLeft = 0
 		inFrontRight = 0
 		inFrontHelp = 0
-		pIr = pointInRect
-		x = 0
-		y = 0
-		#cloud = self.laserproj.projectLaser(data)
-		#gen = pc2.read_points(cloud, skip_nans=True,field_names=("x","y"))
-		n = len(data.ranges)
-		for r in range(n):
-			x = output[:,r][0]
-			y = output[:,r][1]
-			if (pIr(x,y,self.leftArea)):
-				inLeft = inLeft + 1
-			elif (pIr(x,y,self.frontArea)):
-				inFront = inFront + 1
-			elif (pIr(x,y,self.rightArea)):
-				inRight = inRight + 1
-			elif (pIr(x,y,self.frontRightArea)):
-				inFrontRight = inFrontRight + 1
-			elif (pIr(x,y,self.frontLeftArea)):
-				inFrontLeft = inFrontLeft + 1
-			elif (pIr(x,y,self.frontHelpArea)):
-				inFrontHelp = inFrontHelp + 1
+		#ref auf Areas damit lesebarer
+		lA = self.leftArea
+		fA = self.frontArea
+		rA = self.rightArea
+		flA = self.frontLeftArea
+		frA = self.frontRightArea
+		fhA = self.frontHelpArea
+		#ref auf func-vectorized
+		test1 = output[0]
+		test2 = output[1]
+		testa = np.rot90(output)
+		ll = np.array([lA.x1,lA.y1])
+		ur = np.array([lA.x2,lA.y2])
+		inidx = np.all(np.logical_and(ll <= testa, testa <= ur), axis=1)
+		inLeft = np.sum(inidx)
+		#return
+		mapfunc = np.vectorize(pointInRect)
+		#links
+		out = mapfunc(output[0],output[1],lA.x1,lA.x2,lA.y1,lA.y2)
+		inLeft = np.sum(out)
+		return
+		#front
+		out = mapfunc(output[0],output[1],fA.x1,fA.x2,fA.y1,fA.y2)
+		inFront = np.sum(out)
+		#rechts
+		out = mapfunc(output[0],output[1],rA.x1,rA.x2,rA.y1,rA.y2)
+		inRight = np.sum(out)
+		#frontLinks
+		out = mapfunc(output[0],output[1],flA.x1,flA.x2,flA.y1,flA.y2)
+		inFrontLeft = np.sum(out)
+		#frontRechts
+		out = mapfunc(output[0],output[1],frA.x1,frA.x2,frA.y1,frA.y2)
+		inFrontRight = np.sum(out)
+		#frontHilfe
+		out = mapfunc(output[0],output[1],fhA.x1,fhA.x2,fhA.y1,fhA.y2)
+		inFrontHelp = np.sum(out)
+		#Auswertung
 		left  = 'Frei' if inLeft  < 10 else 'Belegt'
 		right = 'Frei' if inRight < 10 else 'Belegt'
 		front = 'Frei' if inFront < 10 else 'Belegt'
@@ -150,9 +161,6 @@ class WallDetection:
 		else:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
-		endTime = time.time()
-		#print (endTime-startTime)
-		#print self.lastWallInfo, self.wallToClose
 
 	def polar2Koord(self,angleIndex,range):
 		x = range * self.cosAngles[angleIndex]
