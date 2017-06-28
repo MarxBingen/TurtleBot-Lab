@@ -45,4 +45,3 @@ class TBPoiDetect:
 			if radius > 70 and radius < 150:
 				detectedColor = "Red"
 		return detectedColor
-		

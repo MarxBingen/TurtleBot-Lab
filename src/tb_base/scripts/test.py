@@ -14,6 +14,19 @@ if __name__ == '__main__':
 		bs.set_color(name='yellow')
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
+		if p.mitte != 'Frei':
+			detected = base.pruefeObject()
+			print detected
+			if detected == "Green":
+				print "Gruen erkannt"
+				for bs in blinkstick.find_all():
+					bs.set_color(name='green')
+			elif detected == "Red":
+				for bs in blinkstick.find_all():
+					bs.set_color(name='red')
+		else:
+			for bs in blinkstick.find_all():
+				bs.set_color(name='yellow')
 		if p.rechts == 'Frei':
 			base.drehe('rechts')
 			base.vorwaerts()
@@ -21,18 +34,6 @@ if __name__ == '__main__':
 			base.vorwaerts()
 		else:
 			base.drehe('links')
-		detected = base.pruefeObject()
-		print detected
-		if detected == "Green":
-			print "Gruen erkannt"
-			for bs in blinkstick.find_all():
-				bs.set_color(name='green')
-		elif detected == "Red":
-			for bs in blinkstick.find_all():
-				bs.set_color(name='red')
-		else:
-			for bs in blinkstick.find_all():
-				bs.set_color(name='yellow')
 		time.sleep(0.5)
 
 	for bs in blinkstick.find_all():
