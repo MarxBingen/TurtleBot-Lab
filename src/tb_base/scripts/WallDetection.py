@@ -4,9 +4,19 @@ import rospy
 import math
 import time
 import numpy as np
+import sensor_msgs.point_cloud2 as pc2
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
+from laser_geometry import LaserProjection
+
+def pointInRect(x,y,rect):
+	if x > rect.x1 and x < rect.x2:
+		if y > rect.y1 and y < rect.y2:
+			return True
+	return False
+
+
 
 class WallDetection:
 
@@ -31,7 +41,7 @@ class WallDetection:
 	cos_sin_map = None
 
 	def __init__(self):
-		print "Wanderkennung gestartet"
+		self.laserproj = LaserProjection()
 		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
 		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
 		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
@@ -39,11 +49,12 @@ class WallDetection:
 		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
 		self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
+		print "Wanderkennung gestartet"
 
 	def calcAngles(self, numAngles,minAngle,angleIncrement):
 		self.anglesCalculated = True
-		cos_map = [np.cos(minAngle + i * angleIncrement) for i in range(N)]
-            	sin_map = [np.sin(minAngle + i * angleIncrement) for i in range(N)]
+		cos_map = [np.cos(minAngle + i * angleIncrement) for i in range(numAngles)]
+            	sin_map = [np.sin(minAngle + i * angleIncrement) for i in range(numAngles)]
 		self.cos_sin_map = np.array([cos_map, sin_map])
 		print "Sin/Cos-Tabellen erstellt"
 
@@ -97,10 +108,9 @@ class WallDetection:
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
 		startTime = time.time()
-		counter = 0
-		#performance verbessern durch funktions-referenzen
-		p2k = self.polar2Koord
-		pIr = self.pointInRect
+		ranges = np.array(data.ranges)
+		ranges = np.array([ranges,ranges])
+		output = ranges * self.cos_sin_map
 		#counter fuer Felder
 		inLeft  = 0
 		inFront = 0
@@ -108,34 +118,26 @@ class WallDetection:
 		inFrontLeft = 0
 		inFrontRight = 0
 		inFrontHelp = 0
-		#lA = self.leftArea
-		#fA = self.frontArea
-		#rA = self.rightArea
-		#frA = self.frontRightArea
-		#flA = self.frontLeftArea
-		#fhA = self.frontHelpArea
+		pIr = pointInRect
 		x = 0
 		y = 0
-		output = ranges * self.cos_sin_map
-		for r in output:
-			#x,y = p2k(counter,r)
-			counter = counter + 1
+		#cloud = self.laserproj.projectLaser(data)
+		#gen = pc2.read_points(cloud, skip_nans=True,field_names=("x","y"))
+		n = len(data.ranges)
+		for r in range(n):
+			x = output[:,r][0]
+			y = output[:,r][1]
 			if (pIr(x,y,self.leftArea)):
 				inLeft = inLeft + 1
-				continue
-			if (pIr(x,y,self.frontArea)):
+			elif (pIr(x,y,self.frontArea)):
 				inFront = inFront + 1
-				continue
-			if (pIr(x,y,self.rightArea)):
+			elif (pIr(x,y,self.rightArea)):
 				inRight = inRight + 1
-				continue
-			if (pIr(x,y,self.frontRightArea)):
+			elif (pIr(x,y,self.frontRightArea)):
 				inFrontRight = inFrontRight + 1
-				continue
-			if (pIr(x,y,self.frontLeftArea)):
+			elif (pIr(x,y,self.frontLeftArea)):
 				inFrontLeft = inFrontLeft + 1
-				continue
-			if (pIr(x,y,self.frontHelpArea)):
+			elif (pIr(x,y,self.frontHelpArea)):
 				inFrontHelp = inFrontHelp + 1
 		left  = 'Frei' if inLeft  < 10 else 'Belegt'
 		right = 'Frei' if inRight < 10 else 'Belegt'
@@ -149,19 +151,13 @@ class WallDetection:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
 		endTime = time.time()
-		print (endTime-startTime)
+		#print (endTime-startTime)
 		#print self.lastWallInfo, self.wallToClose
 
 	def polar2Koord(self,angleIndex,range):
 		x = range * self.cosAngles[angleIndex]
 		y = range * self.sinAngles[angleIndex]
 		return x,y
-
-	def pointInRect(self,x,y,rect):
-		if x > rect.x1 and x < rect.x2:
-			if y > rect.y1 and y < rect.y2:
-				return True
-		return False
 
 if __name__ == '__main__':
 	rospy.init_node('WallDetection_MAIN')
