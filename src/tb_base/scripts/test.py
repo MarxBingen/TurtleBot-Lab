@@ -13,7 +13,14 @@ if __name__ == '__main__':
 	for bs in blinkstick.find_all():
 		bs.set_color(name='yellow')
 	while not rospy.is_shutdown():
-		base.drehe('links')
+		p = base.pruefeFelder()
+		if p.rechts == 'Frei':
+			base.drehe('rechts')
+			base.vorwaerts()
+		elif p.mitte == 'Frei':
+			base.vorwaerts()
+		else:
+			base.drehe('links')
 		detected = base.pruefeObject()
 		print detected
 		if detected == "Green":
