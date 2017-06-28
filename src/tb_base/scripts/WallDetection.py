@@ -7,14 +7,6 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
 
-#optimiert fuer numpy vectorize func
-def pointInRect(x,y,rx1,rx2,ry1,ry2):
-	if x > rx1 and x < rx2:
-		if y > ry1 and y < ry2:
-			return 1
-	return 0
-
-
 class WallDetection:
 
 	laserSub = None
@@ -103,52 +95,58 @@ class WallDetection:
 			return
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
+		#zuerst entfernungen in ein numpy-array konvertieren
 		ranges = np.array(data.ranges)
+		#dann dieses verdoppeln, 2-dim
 		ranges = np.array([ranges,ranges])
+		#nun die werte mit den cos-sin werten je dim multiplizieren
 		output = ranges * self.cos_sin_map
-		#counter fuer Felder
+		#counter fuer Feldbelegungen
 		inLeft  = 0
 		inFront = 0
 		inRight = 0
 		inFrontLeft = 0
 		inFrontRight = 0
 		inFrontHelp = 0
-		#ref auf Areas damit lesebarer
+		#ref auf Areas damit lesebarer, kuerzer
 		lA = self.leftArea
 		fA = self.frontArea
 		rA = self.rightArea
 		flA = self.frontLeftArea
 		frA = self.frontRightArea
 		fhA = self.frontHelpArea
-		#ref auf func-vectorized
-		test1 = output[0]
-		test2 = output[1]
-		testa = np.rot90(output)
+		#das output array drehen, damit x,y je index zusammengehoeren
+		xys = np.rot90(output)
+		#left
 		ll = np.array([lA.x1,lA.y1])
 		ur = np.array([lA.x2,lA.y2])
-		inidx = np.all(np.logical_and(ll <= testa, testa <= ur), axis=1)
-		inLeft = np.sum(inidx)
-		#return
-		mapfunc = np.vectorize(pointInRect)
-		#links
-		out = mapfunc(output[0],output[1],lA.x1,lA.x2,lA.y1,lA.y2)
-		inLeft = np.sum(out)
-		return
+		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inLeft = np.sum(drin)
 		#front
-		out = mapfunc(output[0],output[1],fA.x1,fA.x2,fA.y1,fA.y2)
-		inFront = np.sum(out)
+		ll = np.array([fA.x1,fA.y1])
+		ur = np.array([fA.x2,fA.y2])
+		drin= np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inFront = np.sum(drin)
 		#rechts
-		out = mapfunc(output[0],output[1],rA.x1,rA.x2,rA.y1,rA.y2)
-		inRight = np.sum(out)
+		ll = np.array([rA.x1,rA.y1])
+		ur = np.array([rA.x2,rA.y2])
+		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inRight = np.sum(drin)
 		#frontLinks
-		out = mapfunc(output[0],output[1],flA.x1,flA.x2,flA.y1,flA.y2)
-		inFrontLeft = np.sum(out)
+		ll = np.array([flA.x1,flA.y1])
+		ur = np.array([flA.x2,flA.y2])
+		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inFrontLeft = np.sum(drin)
 		#frontRechts
-		out = mapfunc(output[0],output[1],frA.x1,frA.x2,frA.y1,frA.y2)
-		inFrontRight = np.sum(out)
+		ll = np.array([frA.x1,frA.y1])
+		ur = np.array([frA.x2,frA.y2])
+		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inFrontRight = np.sum(drin)
 		#frontHilfe
-		out = mapfunc(output[0],output[1],fhA.x1,fhA.x2,fhA.y1,fhA.y2)
-		inFrontHelp = np.sum(out)
+		ll = np.array([fhA.x1,fhA.y1])
+		ur = np.array([fhA.x2,fhA.y2])
+		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inFrontHelp = np.sum(drin)
 		#Auswertung
 		left  = 'Frei' if inLeft  < 10 else 'Belegt'
 		right = 'Frei' if inRight < 10 else 'Belegt'
@@ -161,11 +159,6 @@ class WallDetection:
 		else:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
-
-	def polar2Koord(self,angleIndex,range):
-		x = range * self.cosAngles[angleIndex]
-		y = range * self.sinAngles[angleIndex]
-		return x,y
 
 if __name__ == '__main__':
 	rospy.init_node('WallDetection_MAIN')
