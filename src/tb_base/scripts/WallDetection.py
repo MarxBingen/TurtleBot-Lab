@@ -3,6 +3,7 @@
 import rospy
 import math
 import time
+import numpy as np
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
@@ -27,8 +28,7 @@ class WallDetection:
 	frontRightArea = FeldInfo(0.0,0.2,0.10,0.18)
 
 	anglesCalculated = False
-	sinAngles = []
-	cosAngles = []
+	cos_sin_map = None
 
 	def __init__(self):
 		print "Wanderkennung gestartet"
@@ -42,9 +42,9 @@ class WallDetection:
 
 	def calcAngles(self, numAngles,minAngle,angleIncrement):
 		self.anglesCalculated = True
-		for i in range(numAngles):
-			self.sinAngles.append(math.sin(minAngle+(angleIncrement*i)))
-			self.cosAngles.append(math.cos(minAngle+(angleIncrement*i)))
+		cos_map = [np.cos(minAngle + i * angleIncrement) for i in range(N)]
+            	sin_map = [np.sin(minAngle + i * angleIncrement) for i in range(N)]
+		self.cos_sin_map = np.array([cos_map, sin_map])
 		print "Sin/Cos-Tabellen erstellt"
 
 	def wallGetsCloser(self):
@@ -116,8 +116,9 @@ class WallDetection:
 		#fhA = self.frontHelpArea
 		x = 0
 		y = 0
-		for r in data.ranges:
-			x,y = p2k(counter,r)
+		output = ranges * self.cos_sin_map
+		for r in output:
+			#x,y = p2k(counter,r)
 			counter = counter + 1
 			if (pIr(x,y,self.leftArea)):
 				inLeft = inLeft + 1
