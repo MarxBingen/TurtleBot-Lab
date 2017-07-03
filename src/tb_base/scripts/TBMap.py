@@ -13,7 +13,7 @@ class TBMap:
 	mapArray = []
 	posX=0
 	posY=0
-	heading = SimpleHeading.NORD
+	heading = SimpleHeading.SUED
 	map = OccupancyGrid()
 	mapPub = None
 	lastImu = None
@@ -43,13 +43,13 @@ class TBMap:
 
 	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
-			self.posY = self.posY + step
-		elif self.heading is SimpleHeading.SUED:
-			self.posY = self.posY - step
-		elif self.heading is SimpleHeading.WEST:
 			self.posX = self.posX - step
-		elif self.heading is SimpleHeading.OST:
+		elif self.heading is SimpleHeading.SUED:
 			self.posX = self.posX + step
+		elif self.heading is SimpleHeading.WEST:
+			self.posY = self.posY + step
+		elif self.heading is SimpleHeading.OST:
+			self.posY = self.posY - step
 
 	def broadcastMapToOdomTF(self, orientation):
 		p = PoseStamped()
@@ -59,7 +59,10 @@ class TBMap:
 		p.pose.position.y = self.posY
 		p.pose.position.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		p.pose.position.y=((self.posY-self.size)*self.raster)+(self.raster/2)
-		p.pose.orientation = orientation
+		p.pose.orientation.x = orientation[0]
+		p.pose.orientation.y = orientation[1]
+		p.pose.orientation.z = orientation[2]
+		p.pose.orientation.w = orientation[3]
 		self.posePub.publish(p)
 		#broadcast map to odom transform
 		t = TransformStamped()
@@ -68,7 +71,7 @@ class TBMap:
 		t.header.stamp = rospy.Time.now()
 		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
-		t.transform.rotation = imudata.orientation
+		t.transform.rotation = p.pose.orientation
 		#q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
 		#t.transform.rotation.x=q[0]
 		#t.transform.rotation.y=q[1]

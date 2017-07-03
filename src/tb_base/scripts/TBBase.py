@@ -4,7 +4,8 @@ import rospy
 import sys
 import time
 import math
-import numpy
+import numpy as np
+import tf
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu, Image
@@ -73,11 +74,11 @@ class TBBase:
 	def drehe(self,richtung='links'):
 		z = self.turnSpeed
 		w = self.heading
-		new_heading = w+90
+		new_heading = w-90
 		print "Drehe ",richtung
 		if richtung == 'rechts':
 			z = -self.turnSpeed
-			new_heading = w-90
+			new_heading = w+90
 		if new_heading < 0:
 			new_heading=new_heading+360
 		if new_heading > 360:
@@ -90,6 +91,7 @@ class TBBase:
 			if not rospy.is_shutdown():
 				self.movePub.publish(twist)
 			sh = self.heading
+			#print sh, new_heading
 			if (int(sh) == int(new_heading)):
 				turned = True
 				print "Turn Ready"
@@ -142,10 +144,10 @@ class TBBase:
 			return
 		o = data.orientation
 		if (self.initialIMUset==False):
-			self.initialIMU=yaw
+			self.initialIMU=180
 			self.initialIMUset=True
-			self.initialIMURaw = tf.transformations.quaternion_inverse(np.arry([o.x,o.y,o.z,o.w])) 
-		o = data.orientation
+			self.initialIMURaw = tf.transformations.quaternion_inverse(np.array([o.x,o.y,o.z,o.w])) 
+			return
 		current = np.array([o.x,o.y,o.z,o.w])
 		correct = tf.transformations.quaternion_multiply(current,self.initialIMURaw)
 		qx = correct[0]
@@ -156,8 +158,6 @@ class TBBase:
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
 		#yaw hat nun den Winkel zur Ausgangsposition = 180 Grad
 		yaw = 180 - math.degrees(math.atan2(s3,s4))
-		#self.map.publishPosition(data)
-		#print yaw
 		self.heading = yaw
 		#permanent TF broadcasten
 		if not rospy.is_shutdown():
@@ -168,7 +168,7 @@ class TBBase:
 		w = self.wallDetector.getLastWallInfo()
 		if (updateMap):
 			print "Aktualisiere Map"
-			self.map.updateMap(w,self.initialIMURaw)
+			self.map.updateMap(w)
 		return w
 
 
