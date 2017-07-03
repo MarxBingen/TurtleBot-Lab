@@ -51,7 +51,7 @@ class TBMap:
 		elif self.heading is SimpleHeading.OST:
 			self.posX = self.posX + step
 
-	def broadcastMapToOdomTF(self, imudata):
+	def broadcastMapToOdomTF(self, orientation):
 		p = PoseStamped()
 		p.header.frame_id = "mapLab"
 		p.header.stamp = rospy.Time.now()
@@ -59,7 +59,7 @@ class TBMap:
 		p.pose.position.y = self.posY
 		p.pose.position.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		p.pose.position.y=((self.posY-self.size)*self.raster)+(self.raster/2)
-		p.pose.orientation = imudata.orientation
+		p.pose.orientation = orientation
 		self.posePub.publish(p)
 		#broadcast map to odom transform
 		t = TransformStamped()

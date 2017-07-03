@@ -140,23 +140,28 @@ class TBBase:
 		if rospy.is_shutdown() and not self.magSub is None:
 			self.magSub.unregister()
 			return
+		o = data.orientation
 		if (self.initialIMUset==False):
 			self.initialIMU=yaw
 			self.initialIMUset=True
-			self.initialIMURaw = data
-		qx = data.orientation.x
-		qy = data.orientation.y
-		qz = data.orientation.z
-		qw = data.orientation.w
+			self.initialIMURaw = tf.transformations.quaternion_inverse(np.arry([o.x,o.y,o.z,o.w])) 
+		o = data.orientation
+		current = np.array([o.x,o.y,o.z,o.w])
+		correct = tf.transformations.quaternion_multiply(current,self.initialIMURaw)
+		qx = correct[0]
+		qy = correct[1]
+		qz = correct[2]
+		qw = correct[3]
 		s3 = 2 * ((qw*qz) + (qx*qy))
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
-		yaw = math.degrees(math.atan2(s3,s4))+180
+		#yaw hat nun den Winkel zur Ausgangsposition = 180 Grad
+		yaw = 180 - math.degrees(math.atan2(s3,s4))
 		#self.map.publishPosition(data)
 		#print yaw
 		self.heading = yaw
 		#permanent TF broadcasten
 		if not rospy.is_shutdown():
-			self.map.broadcastMapToOdomTF(data)
+			self.map.broadcastMapToOdomTF(correct)
 
 	def pruefeFelder(self,updateMap = False):
 		#w = self.wallDetector.detectWalls2()

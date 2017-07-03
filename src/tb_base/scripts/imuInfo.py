@@ -31,7 +31,6 @@ def imuCallback(data):
 	s3 = 2 * ((qw*qz) + (qx*qy))
 	s4 = 1 - (2 * ((qy*qy) + (qz*qz)))
 	yaw = 180 - (math.degrees(math.atan2(s3,s4)))
-	
 	print qz,qw,yaw
 
 
