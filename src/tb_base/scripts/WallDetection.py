@@ -30,12 +30,12 @@ class WallDetection:
 	cos_sin_map = None
 
 	def __init__(self):
-		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
-		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
-		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
-		self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
-		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
-		self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
+		#self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
+		#self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
+		#self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
+		#self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
+		#self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
+		#self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 		print "Wanderkennung gestartet"
 
@@ -48,6 +48,9 @@ class WallDetection:
 
 	def wallGetsCloser(self):
 		return self.wallToClose
+
+	def getLastWallInfo(self):
+		return self.lastWallInfo
 
 	def publishAreas(self):
 		#front
@@ -95,6 +98,7 @@ class WallDetection:
 			return
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
+			#self.publishAreas()
 		#zuerst entfernungen in ein numpy-array konvertieren
 		ranges = np.array(data.ranges)
 		#dann dieses verdoppeln, 2-dim
@@ -148,9 +152,9 @@ class WallDetection:
 		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
 		inFrontHelp = np.sum(drin)
 		#Auswertung
-		left  = 'Frei' if inLeft  < 10 else 'Belegt'
-		right = 'Frei' if inRight < 10 else 'Belegt'
-		front = 'Frei' if inFront < 10 else 'Belegt'
+		left  = 'Frei' if inLeft  < 20 else 'Belegt'
+		right = 'Frei' if inRight < 20 else 'Belegt'
+		front = 'Frei' if inFront < 50 else 'Belegt'
 		if inFrontHelp < 10 and (inFrontLeft > 10 or inFrontRight > 10):
 			if (inFrontLeft > inFrontRight):
 				self.wallToClose = 'links'
@@ -159,6 +163,7 @@ class WallDetection:
 		else:
 			self.wallToClose = ''
 		self.lastWallInfo = self.WallInfo(left,front,right)
+		#print self.lastWallInfo
 
 if __name__ == '__main__':
 	rospy.init_node('WallDetection_MAIN')

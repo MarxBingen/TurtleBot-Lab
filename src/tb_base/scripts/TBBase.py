@@ -45,8 +45,11 @@ class TBBase:
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		startHeading = int(self.heading)
+		#r = rospy.Rate(15)
 		while not rospy.is_shutdown() and (time.time()< t_end):
+			#r.sleep()
 			p = self.pruefeFelder()
+			#print p
 			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
@@ -153,7 +156,7 @@ class TBBase:
 
 	def pruefeFelder(self,updateMap = False):
 		#w = self.wallDetector.detectWalls2()
-		w = self.wallDetector.lastWallInfo
+		w = self.wallDetector.getLastWallInfo()
 		if (updateMap):
 			print "Pruefe Belegungen"
 			self.map.updateMap(w)

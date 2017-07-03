@@ -16,12 +16,12 @@ if __name__ == '__main__':
 		p = base.pruefeFelder()
 		if p.mitte != 'Frei':
 			detected = base.pruefeObject()
-			print detected
 			if detected == "Green":
 				print "Gruen erkannt"
 				for bs in blinkstick.find_all():
 					bs.set_color(name='green')
 			elif detected == "Red":
+				print "Rot erkannt"
 				for bs in blinkstick.find_all():
 					bs.set_color(name='red')
 		else:
@@ -29,6 +29,7 @@ if __name__ == '__main__':
 				bs.set_color(name='yellow')
 		if p.rechts == 'Frei':
 			base.drehe('rechts')
+			print "Fahre Vorwaerts"
 			base.vorwaerts()
 		elif p.mitte == 'Frei':
 			base.vorwaerts()

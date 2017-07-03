@@ -34,9 +34,9 @@ class TBMap:
 		#print self.heading
 
 	def printPosition(self):
-		pass
-		#print "Position:", self.posX-self.size, self.posY-self.size
-		#print "Heading:",self.heading
+		#pass
+		print "Position:", self.posX-self.size, self.posY-self.size
+		print "Heading:",self.heading
 
 	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
