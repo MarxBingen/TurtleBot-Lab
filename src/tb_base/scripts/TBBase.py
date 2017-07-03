@@ -22,6 +22,7 @@ class TBBase:
 	heading = 0
 	initialIMUset = False
 	initialIMU = 0
+	initialIMURaw = None
 	magSub = None
 	wallDetector = None
 	map = None
@@ -139,6 +140,10 @@ class TBBase:
 		if rospy.is_shutdown() and not self.magSub is None:
 			self.magSub.unregister()
 			return
+		if (self.initialIMUset==False):
+			self.initialIMU=yaw
+			self.initialIMUset=True
+			self.initialIMURaw = data
 		qx = data.orientation.x
 		qy = data.orientation.y
 		qz = data.orientation.z
@@ -146,20 +151,19 @@ class TBBase:
 		s3 = 2 * ((qw*qz) + (qx*qy))
 		s4 = 1 - 2 * ((qy*qy) + (qz*qz))
 		yaw = math.degrees(math.atan2(s3,s4))+180
+		#self.map.publishPosition(data)
+		#print yaw
 		self.heading = yaw
-		if (self.initialIMUset==False):
-			self.initialIMU=yaw
-			self.initialIMUset=True
 		#permanent TF broadcasten
 		if not rospy.is_shutdown():
-			self.map.broadcastMapToOdomTF()
+			self.map.broadcastMapToOdomTF(data)
 
 	def pruefeFelder(self,updateMap = False):
 		#w = self.wallDetector.detectWalls2()
 		w = self.wallDetector.getLastWallInfo()
 		if (updateMap):
-			print "Pruefe Belegungen"
-			self.map.updateMap(w)
+			print "Aktualisiere Map"
+			self.map.updateMap(w,self.initialIMURaw)
 		return w
 
 

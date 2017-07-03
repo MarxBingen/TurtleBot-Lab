@@ -7,7 +7,7 @@ import tf2_ros
 
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import Pose,Point,TransformStamped,Quaternion
+from geometry_msgs.msg import PoseStamped,Pose,Point,TransformStamped,Quaternion
 class TBMap:
 	
 	mapArray = []
@@ -16,6 +16,7 @@ class TBMap:
 	heading = SimpleHeading.NORD
 	map = OccupancyGrid()
 	mapPub = None
+	lastImu = None
 	knoten = []
 	kanten = []
 
@@ -28,6 +29,8 @@ class TBMap:
 		self.posY = size
 		self.mapPub = rospy.Publisher('mapLab',OccupancyGrid,queue_size=1)
 		self.tfPub = tf2_ros.TransformBroadcaster()
+		self.posePub = rospy.Publisher('myPose',PoseStamped,queue_size=1)
+
 
 	def turned(self,richtung):
 		self.heading = SimpleHeading.turn(self.heading,richtung)
@@ -48,8 +51,16 @@ class TBMap:
 		elif self.heading is SimpleHeading.OST:
 			self.posX = self.posX + step
 
-
-	def broadcastMapToOdomTF(self):
+	def broadcastMapToOdomTF(self, imudata):
+		p = PoseStamped()
+		p.header.frame_id = "mapLab"
+		p.header.stamp = rospy.Time.now()
+		p.pose.position.x = self.posX
+		p.pose.position.y = self.posY
+		p.pose.position.x=((self.posX-self.size)*self.raster)+(self.raster/2)
+		p.pose.position.y=((self.posY-self.size)*self.raster)+(self.raster/2)
+		p.pose.orientation = imudata.orientation
+		self.posePub.publish(p)
 		#broadcast map to odom transform
 		t = TransformStamped()
 		t.child_frame_id = "base_footprint"
@@ -57,11 +68,12 @@ class TBMap:
 		t.header.stamp = rospy.Time.now()
 		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
-		q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
-		t.transform.rotation.x=q[0]
-		t.transform.rotation.y=q[1]
-		t.transform.rotation.z=q[2]
-		t.transform.rotation.w=q[3]
+		t.transform.rotation = imudata.orientation
+		#q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
+		#t.transform.rotation.x=q[0]
+		#t.transform.rotation.y=q[1]
+		#t.transform.rotation.z=q[2]
+		#t.transform.rotation.w=q[3]
 		if not rospy.is_shutdown():
 			self.tfPub.sendTransform(t)
 

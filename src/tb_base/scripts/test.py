@@ -29,7 +29,6 @@ if __name__ == '__main__':
 				bs.set_color(name='yellow')
 		if p.rechts == 'Frei':
 			base.drehe('rechts')
-			print "Fahre Vorwaerts"
 			base.vorwaerts()
 		elif p.mitte == 'Frei':
 			base.vorwaerts()
