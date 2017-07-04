@@ -170,9 +170,9 @@ class WallDetection:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
-		self.lock.acquire()
+		#self.lock.acquire()
 		self.lastWallInfo = self.WallInfo(left,front,right)
-		self.lock.release()
+		#self.lock.release()
 		#print self.lastWallInfo
 
 if __name__ == '__main__':

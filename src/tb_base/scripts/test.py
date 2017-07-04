@@ -14,6 +14,9 @@ if __name__ == '__main__':
 		bs.set_color(name='yellow')
 	while not rospy.is_shutdown():
 		p = base.pruefeFelder()
+		#time.sleep(0.2)
+		#print p
+		#continue
 		if p.mitte != 'Frei':
 			detected = base.pruefeObject()
 			if detected == "Green":

@@ -47,10 +47,11 @@ class TBBase:
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		startHeading = int(self.heading)
-		r = rospy.Rate(15)
+		#r = rospy.Rate(15)
 		while not rospy.is_shutdown() and (time.time()< t_end):
-			r.sleep()
+			#r.sleep()
 			p = self.pruefeFelder()
+			print p
 			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
@@ -65,12 +66,6 @@ class TBBase:
 				twist.angular.z = 0.0
 				#twist.angular.z = self.keepStraight(startHeading)
 			self.movePub.publish(twist)
-		p = self.pruefeFelder()
-		if (p.mitte=='Belegt'):
-			print "STOP"
-			self.movePub.publish(Twist())
-		print "Feldbelegungen"
-		print p
 		self.map.updatePosition(1)
 		self.map.printPosition()
 		self.pruefeFelder(True)
@@ -170,9 +165,9 @@ class TBBase:
 
 	def pruefeFelder(self,updateMap = False):
 		#w = self.wallDetector.detectWalls2()
-		self.wallDetector.lock.acquire()
+		#self.wallDetector.lock.acquire()
 		w = self.wallDetector.getLastWallInfo()
-		self.wallDetector.lock.release()
+		#self.wallDetector.lock.release()
 		if (updateMap):
 			print "Aktualisiere Map"
 			self.map.updateMap(w)
