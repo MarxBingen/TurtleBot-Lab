@@ -38,7 +38,7 @@ class TBBase:
 		self.objectDetector = TBPoiDetect()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,queue_size=1,callback=self.imuCallback)
 		time.sleep(1)
-		self.movePub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
+		self.movePub = rospy.Publisher('cmd_vel_mux/input/safety_controller',Twist, queue_size=1)
 
 	def vorwaerts(self):
 		print "Fahre vorwaerts"
@@ -51,7 +51,7 @@ class TBBase:
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			#r.sleep()
 			p = self.pruefeFelder()
-			print p
+			#print p
 			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
