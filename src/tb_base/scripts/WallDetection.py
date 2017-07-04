@@ -3,6 +3,7 @@
 import rospy
 import math
 import numpy as np
+from threading import BoundedSemaphore
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
@@ -29,13 +30,15 @@ class WallDetection:
 	anglesCalculated = False
 	cos_sin_map = None
 
+	lock = BoundedSemaphore()
+
 	def __init__(self):
-		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
-		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
-		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
-		self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
-		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
-		self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
+		#self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
+		#self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
+		#self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
+		#self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
+		#self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
+		#self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 		print "Wanderkennung gestartet"
 
@@ -103,7 +106,7 @@ class WallDetection:
 			return
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
-			self.publishAreas()
+			#self.publishAreas()
 		#zuerst entfernungen in ein numpy-array konvertieren
 		ranges = np.array(data.ranges)
 		#dann dieses verdoppeln, 2-dim
@@ -167,7 +170,9 @@ class WallDetection:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
+		self.lock.acquire()
 		self.lastWallInfo = self.WallInfo(left,front,right)
+		self.lock.release()
 		#print self.lastWallInfo
 
 if __name__ == '__main__':
