@@ -19,23 +19,23 @@ class WallDetection:
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
 	frontArea = FeldInfo(0.0  , 0.15,-0.10, 0.10)
-	leftArea =  FeldInfo(-0.25,-0.0,-0.30,-0.18)
-	rightArea = FeldInfo(-0.25,-0.0, 0.18, 0.30)
+	leftArea =  FeldInfo(-0.20,-0.05,-0.30,-0.18)
+	rightArea = FeldInfo(-0.20,-0.05, 0.18, 0.30)
 
-	frontHelpArea = FeldInfo(0.15,0.2,-0.1,0.1)
-	frontLeftArea = FeldInfo(0.0,0.2,-0.18,-0.10)
-	frontRightArea = FeldInfo(0.0,0.2,0.10,0.18)
+	frontHelpArea = FeldInfo(0.15,0.3,-0.05,0.05)
+	frontLeftArea = FeldInfo(0.0,0.3,-0.18,-0.10)
+	frontRightArea = FeldInfo(0.0,0.3,0.10,0.18)
 
 	anglesCalculated = False
 	cos_sin_map = None
 
 	def __init__(self):
-		#self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
-		#self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
-		#self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
-		#self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
-		#self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
-		#self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
+		self.areaLeft = rospy.Publisher('areaLeft', PolygonStamped, queue_size=1)
+		self.areaFront = rospy.Publisher('areaFront', PolygonStamped, queue_size=1)
+		self.areaRight = rospy.Publisher('areaRight', PolygonStamped, queue_size=1)
+		self.areaFRight = rospy.Publisher('areaFRight', PolygonStamped, queue_size=1)
+		self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
+		self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 		print "Wanderkennung gestartet"
 
@@ -65,7 +65,7 @@ class WallDetection:
 		fha = self.frontHelpArea
 		fleft = [Point32(x=fla.x1,y=fla.y1),Point32(x=fla.x1,y=fla.y2),Point32(x=fla.x2,y=fla.y2),Point32(x=fla.x2,y=fla.y1)]
 		fright = [Point32(x=fra.x1,y=fra.y1),Point32(x=fra.x1,y=fra.y2),Point32(x=fra.x2,y=fra.y2),Point32(x=fra.x2,y=fra.y1)]
-		fha = [Point32(x=fha.x1,y=fha.y1),Point32(x=fha.x1,y=fha.y2),Point32(x=fha.x2,y=fha.y2),Point32(x=fha.x2,y=fha.y1)]
+		fhelp = [Point32(x=fha.x1,y=fha.y1),Point32(x=fha.x1,y=fha.y2),Point32(x=fha.x2,y=fha.y2),Point32(x=fha.x2,y=fha.y1)]
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
@@ -89,7 +89,12 @@ class WallDetection:
 		p = PolygonStamped()
 		p.header.frame_id="laser"
 		p.header.stamp = rospy.Time.now()
-		p.polygon.points=fha
+		p.polygon.points=fleft
+		self.areaFLeft.publish(p)
+		p = PolygonStamped()
+		p.header.frame_id="laser"
+		p.header.stamp = rospy.Time.now()
+		p.polygon.points=fhelp
 		self.areaFHelp.publish(p)
 
 	def laserCallback(self,data):
@@ -98,7 +103,7 @@ class WallDetection:
 			return
 		if self.anglesCalculated == False:
 			self.calcAngles(len(data.ranges),data.angle_min,data.angle_increment)
-			#self.publishAreas()
+			self.publishAreas()
 		#zuerst entfernungen in ein numpy-array konvertieren
 		ranges = np.array(data.ranges)
 		#dann dieses verdoppeln, 2-dim

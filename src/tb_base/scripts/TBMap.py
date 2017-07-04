@@ -8,12 +8,13 @@ import tf2_ros
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped,Pose,Point,TransformStamped,Quaternion
+
 class TBMap:
-	
+
 	mapArray = []
 	posX=0
 	posY=0
-	heading = SimpleHeading.SUED
+	heading = SimpleHeading.OST
 	map = OccupancyGrid()
 	mapPub = None
 	lastImu = None
@@ -43,13 +44,13 @@ class TBMap:
 
 	def updatePosition(self,step):
 		if self.heading is SimpleHeading.NORD:
-			self.posX = self.posX - step
-		elif self.heading is SimpleHeading.SUED:
-			self.posX = self.posX + step
-		elif self.heading is SimpleHeading.WEST:
 			self.posY = self.posY + step
-		elif self.heading is SimpleHeading.OST:
+		elif self.heading is SimpleHeading.SUED:
 			self.posY = self.posY - step
+		elif self.heading is SimpleHeading.WEST:
+			self.posX = self.posX - step
+		elif self.heading is SimpleHeading.OST:
+			self.posX = self.posX + step
 
 	def broadcastMapToOdomTF(self, orientation):
 		p = PoseStamped()
@@ -63,7 +64,6 @@ class TBMap:
 		p.pose.orientation.y = orientation[1]
 		p.pose.orientation.z = orientation[2]
 		p.pose.orientation.w = orientation[3]
-		self.posePub.publish(p)
 		#broadcast map to odom transform
 		t = TransformStamped()
 		t.child_frame_id = "base_footprint"
@@ -78,6 +78,7 @@ class TBMap:
 		#t.transform.rotation.z=q[2]
 		#t.transform.rotation.w=q[3]
 		if not rospy.is_shutdown():
+			self.posePub.publish(p)
 			self.tfPub.sendTransform(t)
 
 	def updateMap(self, feldbelegung):

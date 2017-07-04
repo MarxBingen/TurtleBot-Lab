@@ -36,7 +36,7 @@ class TBBase:
 		self.map = TBMap(int(10/gridSize),self.gridSize)
 		self.wallDetector = WallDetection()
 		self.objectDetector = TBPoiDetect()
-		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,self.imuCallback)
+		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,queue_size=1,callback=self.imuCallback)
 		time.sleep(1)
 		self.movePub = rospy.Publisher('cmd_vel_mux/input/teleop',Twist, queue_size=1)
 
@@ -47,11 +47,10 @@ class TBBase:
 		t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		startHeading = int(self.heading)
-		#r = rospy.Rate(15)
+		#r = rospy.Rate(25)
 		while not rospy.is_shutdown() and (time.time()< t_end):
 			#r.sleep()
 			p = self.pruefeFelder()
-			#print p
 			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
@@ -83,7 +82,7 @@ class TBBase:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
-		new_heading = self.korrigiereHeading(new_heading)
+		#new_heading = self.korrigiereHeading(new_heading)
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
