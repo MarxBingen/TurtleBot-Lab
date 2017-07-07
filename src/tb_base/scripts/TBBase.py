@@ -7,7 +7,7 @@ import math
 import numpy as np
 import tf
 
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, Point
 from sensor_msgs.msg import Imu, Image
 from nav_msgs.msg import Odometry
 
@@ -28,7 +28,9 @@ class TBBase:
 	magSub = None
 	wallDetector = None
 	map = None
-	lastOdom = Odometry()
+	lastOdomPos = Point()
+	initialOdomPos = Point()
+	initialOdomPosSet = False
 
 	def __init__(self,gridSize=0.5):
 		print "Starte System..."
@@ -50,12 +52,12 @@ class TBBase:
 		#t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
 		#Anfangs Odom Position
-		sop = self.lastOdom.pose.pose.position
+		sop = self.lastOdomPos
 		odomDiffX = 0
 		odomDiffY = 0
 		startHeading = int(self.heading)
 		while not rospy.is_shutdown():
-			cop = self.lastOdom.pose.pose.position
+			cop = self.lastOdomPos
 			odomDiffX = abs(sop.x - cop.x)
 			odomDiffY = abs(sop.y - cop.y)
 			#print odomDiffX,odomDiffY
@@ -78,8 +80,14 @@ class TBBase:
 			self.movePub.publish(twist)
 		self.map.updatePosition(1)
 		self.map.printPosition()
+		self.calcPosition()
 		self.pruefeFelder(True)
 		#self.map.updateMap(self.pruefeFelder())
+
+	def calcPosition(self):
+		x = round((self.lastOdomPos.x - self.initialOdomPos.x) / self.gridSize)
+		y = round((self.lastOdomPos.y - self.initialOdomPos.y) / self.gridSize)
+		print x,y
 
 	def drehe(self,richtung='links'):
 		z = self.turnSpeed
@@ -149,7 +157,10 @@ class TBBase:
 		return result
 
 	def odomCallback(self,odom):
-		self.lastOdom = odom
+		if (self.initialOdomPosSet == False):
+			self.initialOdomPos = odom.pose.pose.position
+			self.initialOdomPosSet = True
+		self.lastOdomPos = odom.pose.pose.position
 
 	def imuCallback(self,data):
 		if rospy.is_shutdown() and not self.magSub is None:
