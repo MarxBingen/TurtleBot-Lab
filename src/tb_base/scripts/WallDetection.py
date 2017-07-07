@@ -19,7 +19,7 @@ class WallDetection:
 	wallToClose = ''
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
-	frontArea = FeldInfo(0.0  , 0.15,-0.10, 0.10)
+	frontArea = FeldInfo(0.0  , 0.10,-0.10, 0.10)
 	leftArea =  FeldInfo(-0.20,-0.05,-0.30,-0.18)
 	rightArea = FeldInfo(-0.20,-0.05, 0.18, 0.30)
 

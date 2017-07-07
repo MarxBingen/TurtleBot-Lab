@@ -9,6 +9,7 @@ import tf
 
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Imu, Image
+from nav_msgs.msg import Odometry
 
 from WallDetection import WallDetection
 from TBMap import TBMap
@@ -27,6 +28,7 @@ class TBBase:
 	magSub = None
 	wallDetector = None
 	map = None
+	lastOdom = Odometry()
 
 	def __init__(self,gridSize=0.5):
 		print "Starte System..."
@@ -37,6 +39,7 @@ class TBBase:
 		self.wallDetector = WallDetection()
 		self.objectDetector = TBPoiDetect()
 		self.magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,queue_size=1,callback=self.imuCallback)
+		self.odomSub = rospy.Subscriber('odom',Odometry,queue_size=1,callback=self.odomCallback)
 		time.sleep(1)
 		self.movePub = rospy.Publisher('cmd_vel_mux/input/safety_controller',Twist, queue_size=1)
 
@@ -44,14 +47,22 @@ class TBBase:
 		print "Fahre vorwaerts"
 		twist = Twist()
 		twist.linear.x = self.speed
-		t_end = time.time() + (self.gridSize / self.speed)
+		#t_end = time.time() + (self.gridSize / self.speed)
 		wc=''
+		#Anfangs Odom Position
+		sop = self.lastOdom.pose.pose.position
+		odomDiffX = 0
+		odomDiffY = 0
 		startHeading = int(self.heading)
-		#r = rospy.Rate(15)
-		while not rospy.is_shutdown() and (time.time()< t_end):
-			#r.sleep()
+		while not rospy.is_shutdown():
+			cop = self.lastOdom.pose.pose.position
+			odomDiffX = abs(sop.x - cop.x)
+			odomDiffY = abs(sop.y - cop.y)
+			#print odomDiffX,odomDiffY
+			if odomDiffX > self.gridSize or odomDiffY > self.gridSize:
+				print "Gefahren"
+				break
 			p = self.pruefeFelder()
-			#print p
 			if p.mitte=='Belegt':
 				print "STOP"
 				self.movePub.publish(Twist())
@@ -64,7 +75,6 @@ class TBBase:
 					twist.angular.z=-0.5
 			else:
 				twist.angular.z = 0.0
-				#twist.angular.z = self.keepStraight(startHeading)
 			self.movePub.publish(twist)
 		self.map.updatePosition(1)
 		self.map.printPosition()
@@ -137,6 +147,9 @@ class TBBase:
 		if result>=360:
 			result=result-360
 		return result
+
+	def odomCallback(self,odom):
+		self.lastOdom = odom
 
 	def imuCallback(self,data):
 		if rospy.is_shutdown() and not self.magSub is None:

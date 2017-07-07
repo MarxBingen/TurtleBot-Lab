@@ -37,7 +37,7 @@ if __name__ == '__main__':
 			base.vorwaerts()
 		else:
 			base.drehe('links')
-		time.sleep(0.5)
+		#time.sleep(0.5)
 
 	for bs in blinkstick.find_all():
 		bs.set_color(name='off')
