@@ -20,7 +20,7 @@ class WallDetection:
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
 	frontArea = FeldInfo(0.0  , 0.20,-0.10, 0.10)
-	nearFrontArea = FeldInfo(0.0 , 0.08,-0.10, 0.10)
+	nearFrontArea = FeldInfo(0.0 , 0.10,-0.10, 0.10)
 	leftArea =  FeldInfo(-0.20,-0.05,-0.30,-0.18)
 	rightArea = FeldInfo(-0.20,-0.05, 0.18, 0.30)
 
@@ -184,7 +184,7 @@ class WallDetection:
 		#self.lock.acquire()
 		self.lastWallInfo = self.WallInfo(left,front,right)
 		#self.lock.release()
-		#print self.lastWallInfo
+		#print self.wallToClose
 
 if __name__ == '__main__':
 	rospy.init_node('WallDetection_MAIN')
