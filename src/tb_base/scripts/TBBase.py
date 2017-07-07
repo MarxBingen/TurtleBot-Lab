@@ -64,17 +64,16 @@ class TBBase:
 			if odomDiffX > self.gridSize or odomDiffY > self.gridSize:
 				print "Gefahren"
 				break
-			p = self.pruefeFelder()
-			if p.mitte=='Belegt':
-				print "STOP"
-				self.movePub.publish(Twist())
-				break
 			wc = self.wallDetector.wallGetsCloser()
 			if (not wc == ''):
 				if wc == 'rechts':
 					twist.angular.z=0.5
-				if wc == 'links':
+				elif wc == 'links':
 					twist.angular.z=-0.5
+				elif wc == 'mitte':
+					self.movePub.publish(Twist())
+					print "Stop vor Wand"
+					break
 			else:
 				twist.angular.z = 0.0
 			self.movePub.publish(twist)
@@ -109,7 +108,6 @@ class TBBase:
 			if not rospy.is_shutdown():
 				self.movePub.publish(twist)
 			sh = self.heading
-			#print sh, new_heading
 			if (int(sh) == int(new_heading)):
 				turned = True
 				print "Turn Ready"
@@ -120,7 +118,7 @@ class TBBase:
 		self.pruefeFelder(True)
 		#print "Stopped Turning"
 
-	#sorgt dafuer, dass nach einer Drehung wieder geradeaus faehrt
+	#sorgt dafuer, dass nach einer Drehung wieder richtig geradeaus faehrt
 	def internalZeroAngular(self):
 		twist = Twist()
 		if not rospy.is_shutdown():

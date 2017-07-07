@@ -19,11 +19,12 @@ class WallDetection:
 	wallToClose = ''
 	#linkes feld
 	FeldInfo = namedtuple('FeldInfo','x1,x2,y1,y2')
-	frontArea = FeldInfo(0.0  , 0.10,-0.10, 0.10)
+	frontArea = FeldInfo(0.0  , 0.20,-0.10, 0.10)
+	nearFrontArea = FeldInfo(0.0 , 0.08,-0.10, 0.10)
 	leftArea =  FeldInfo(-0.20,-0.05,-0.30,-0.18)
 	rightArea = FeldInfo(-0.20,-0.05, 0.18, 0.30)
 
-	frontHelpArea = FeldInfo(0.15,0.3,-0.05,0.05)
+	frontHelpArea = FeldInfo(0.05,0.4,-0.05,0.05)
 	frontLeftArea = FeldInfo(0.0,0.3,-0.18,-0.10)
 	frontRightArea = FeldInfo(0.0,0.3,0.10,0.18)
 
@@ -116,6 +117,7 @@ class WallDetection:
 		#counter fuer Feldbelegungen
 		inLeft  = 0
 		inFront = 0
+		inNearFront = 0
 		inRight = 0
 		inFrontLeft = 0
 		inFrontRight = 0
@@ -123,6 +125,7 @@ class WallDetection:
 		#ref auf Areas damit lesebarer, kuerzer
 		lA = self.leftArea
 		fA = self.frontArea
+		nfA = self.nearFrontArea
 		rA = self.rightArea
 		flA = self.frontLeftArea
 		frA = self.frontRightArea
@@ -139,6 +142,11 @@ class WallDetection:
 		ur = np.array([fA.x2,fA.y2])
 		drin= np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
 		inFront = np.sum(drin)
+		#nearfront
+		ll = np.array([nfA.x1,nfA.y1])
+		ur = np.array([nfA.x2,nfA.y2])
+		drin= np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
+		inNearFront = np.sum(drin)
 		#rechts
 		ll = np.array([rA.x1,rA.y1])
 		ur = np.array([rA.x2,rA.y2])
@@ -163,13 +171,16 @@ class WallDetection:
 		left  = 'Frei' if inLeft  < 20 else 'Belegt'
 		right = 'Frei' if inRight < 20 else 'Belegt'
 		front = 'Frei' if inFront < 50 else 'Belegt'
-		if inFrontHelp < 10 and (inFrontLeft > 10 or inFrontRight > 10):
+		if (inFrontHelp < 10) and (inFrontLeft > 10 or inFrontRight > 10):
 			if (inFrontLeft > inFrontRight):
 				self.wallToClose = 'links'
 			else:
 				self.wallToClose = 'rechts'
 		else:
 			self.wallToClose = ''
+		#ueberschreibt annaeherung wenn zu nah an wand
+		if inNearFront > 20:
+			self.wallToClose = 'mitte'
 		#self.lock.acquire()
 		self.lastWallInfo = self.WallInfo(left,front,right)
 		#self.lock.release()
