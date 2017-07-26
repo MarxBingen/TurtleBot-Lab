@@ -19,8 +19,8 @@ class TBBase:
 
 	movePub = None
 	gridSize = 0.5
-	speed = 0.2 #0,2 meter pro sek
-	turnSpeed = math.radians(45) #45 grad pro sekunde
+	speed = 0.3 #0,2 meter pro sek
+	turnSpeed = math.radians(60) #45 grad pro sekunde
 	heading = 0
 	initialIMUset = False
 	initialIMU = 0
@@ -100,7 +100,7 @@ class TBBase:
 			new_heading=new_heading+360
 		if new_heading > 360:
 			new_heading=new_heading-360
-		#new_heading = self.korrigiereHeading(new_heading)
+		new_heading = self.korrigiereHeading(new_heading)
 		twist = Twist()
 		twist.angular.z = z
 		turned = False
