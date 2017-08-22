@@ -8,7 +8,9 @@ from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import PolygonStamped,Point32
 from collections import namedtuple
 
-class WallDetection:
+from tb_base.msg import WallDetection
+
+class TBWallDetection:
 
 	laserSub = None
 	lastScan = None
@@ -41,6 +43,7 @@ class WallDetection:
 		#self.areaFLeft = rospy.Publisher('areaFLeft', PolygonStamped, queue_size=1)
 		#self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
+		self.wallPub = rospy.Publisher('wallDetection',WallDetection,queue_size=1)
 		print "Wanderkennung gestartet"
 
 	def calcAngles(self, numAngles,minAngle,angleIncrement):
@@ -49,12 +52,6 @@ class WallDetection:
             	sin_map = [np.sin(minAngle + i * angleIncrement) for i in range(numAngles)]
 		self.cos_sin_map = np.array([cos_map, sin_map])
 		print "Sin/Cos-Tabellen erstellt"
-
-	def wallGetsCloser(self):
-		return self.wallToClose
-
-	def getLastWallInfo(self):
-		return self.lastWallInfo
 
 	def publishAreas(self):
 		#front
@@ -167,29 +164,25 @@ class WallDetection:
 		ur = np.array([fhA.x2,fhA.y2])
 		drin = np.all(np.logical_and(ll <= xys, xys <= ur), axis=1)
 		inFrontHelp = np.sum(drin)
-		#Auswertung
-		left  = 'Frei' if inLeft  < 20 else 'Belegt'
-		right = 'Frei' if inRight < 20 else 'Belegt'
-		front = 'Frei' if inFront < 50 else 'Belegt'
+		#Auswertung False = Frei nach WallDetection.msg
+		wd = WallDetection()
+		wd.left  = False if inLeft  < 20 else True
+		wd.right = False if inRight < 20 else True
+		wd.front = False if inFront < 50 else True
+		#Close 0 = frei 1=links 2=mitte 3=rechts
 		if (inFrontHelp < 10) and (inFrontLeft > 10 or inFrontRight > 10):
 			if (inFrontLeft > inFrontRight):
-				self.wallToClose = 'links'
+				wd.close = 1
 			else:
-				self.wallToClose = 'rechts'
+				wd.close = 3
 		else:
-			self.wallToClose = ''
+			wd.close = 0
 		#ueberschreibt annaeherung wenn zu nah an wand
 		if inNearFront > 20:
-			self.wallToClose = 'mitte'
-		#self.lock.acquire()
-		self.lastWallInfo = self.WallInfo(left,front,right)
-		#self.lock.release()
-		#print self.wallToClose
+			wd.close = 2
+		self.wallPub.publish(wd)
 
 if __name__ == '__main__':
-	rospy.init_node('WallDetection_MAIN')
+	rospy.init_node('WallDetection')
 	p = WallDetection()
-	try:
-		rospy.spin()
-	except KeyboardInterrupt:
-		print("Stopped")
+	rospy.spin()

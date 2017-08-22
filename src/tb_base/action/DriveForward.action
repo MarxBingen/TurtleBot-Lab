@@ -1,5 +1,6 @@
 # Define the goal
 uint32 distance  # in cm, wie weit gefahren werden soll 
+float32 speed	#in m pro sekunde
 ---
 # Define the result
 uint32 distance_driven
