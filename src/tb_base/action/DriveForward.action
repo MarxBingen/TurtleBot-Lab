@@ -1,0 +1,9 @@
+# Define the goal
+uint32 distance  # in cm, wie weit gefahren werden soll 
+---
+# Define the result
+uint32 distance_driven
+bool canceled	#true, wenn abgebrochen, z.B. durch Wand
+---
+# Define a feedback message
+float32 percent_complete
