@@ -184,5 +184,5 @@ class TBWallDetection:
 
 if __name__ == '__main__':
 	rospy.init_node('WallDetection')
-	p = WallDetection()
+	p = TBWallDetection()
 	rospy.spin()
