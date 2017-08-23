@@ -5,23 +5,32 @@ import cv2
 import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from tb_base.srv import PoiDetect
 
-class TBPoiDetect:
+class TBPoiDetectService:
 
 	def __init__(self):
+		print "PoiDetectService wird initialisiert"
 		self.bridge = CvBridge()
-
+		#Color range definition
 		self.redLow = np.array([47,0,0], dtype=np.uint8)
 		self.redHigh = np.array([255,16,14], dtype=np.uint8)
 		self.greenLow = np.array([0,37,0], dtype=np.uint8)
 		self.greenHigh = np.array([22,255,42], dtype=np.uint8)
+		#Service starten
+		self.s = rospy.Service('PoiDetectService', PoiDetect, self.detect)
+		print "PoiDetectService gestartet"
 
-	def detect(self,data):
+	def detect(self):
 		try:
+			data = rospy.wait_for_message('/camera/rgb/image_color',Image,10.0)
 			imgO = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
 			print(e)
-			return "Error"
+			result = PoiDetect()
+			result.detected = False
+			result.color = 'Error'
+			return result
 		imgC = cv2.cvtColor(imgO, cv2.COLOR_BGR2RGB)
 		#bild optimierungen
 		imgC = cv2.erode(imgC, None, iterations=2)
@@ -44,4 +53,13 @@ class TBPoiDetect:
 			((x, y), radius) = cv2.minEnclosingCircle(c)
 			if radius > 70 and radius < 150:
 				detectedColor = "Red"
-		return detectedColor
+		result = PoiDetect()
+		result.detected = detectColor != None
+		result.color = detectedColor
+		return result
+		
+if __name__ == '__main__':
+	
+	rospy.init_node('TBPoiDetectService')
+	p = TBPoiDetectService()
+	rospy.spin()

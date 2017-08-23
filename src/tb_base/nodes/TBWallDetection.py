@@ -44,7 +44,7 @@ class TBWallDetection:
 		#self.areaFHelp = rospy.Publisher('areaFHelp', PolygonStamped, queue_size=1)
 		self.laserSub = rospy.Subscriber('/scan', LaserScan,queue_size = 1,callback=self.laserCallback)
 		self.wallPub = rospy.Publisher('wallDetection',WallDetection,queue_size=1)
-		print "Wanderkennung gestartet"
+		print "Wanderkennung initialisiert"
 
 	def calcAngles(self, numAngles,minAngle,angleIncrement):
 		self.anglesCalculated = True
@@ -183,6 +183,7 @@ class TBWallDetection:
 		self.wallPub.publish(wd)
 
 if __name__ == '__main__':
-	rospy.init_node('WallDetection')
-	p = WallDetection()
+	print "Wanderkennung gestartet"
+	rospy.init_node('TBWallDetection')
+	p = TBWallDetection()
 	rospy.spin()
