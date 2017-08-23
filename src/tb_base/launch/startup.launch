@@ -2,7 +2,4 @@
 	
 	<include file="$(find tb_base)/launch/includes/minimal.launch.xml"/>
 
-	<include file="$(find tb_base)/launch/includes/sick_tim571_2050101.launch.xml"/>
-
-	<include file="$(find tb_base)/launch/includes/freenect_rgb.launch.xml"/>
 </launch>
