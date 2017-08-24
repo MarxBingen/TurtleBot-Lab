@@ -29,14 +29,14 @@ class TBDriveForwardServer:
 
 	def odomCallback(self,odom):
 		self.lastOdomPos = odom.pose.pose.position
+
+	def wallCallback(self,w):
+		self.lastWallDetect = w
 		if (self.status == 'Driving'):
 			if (self.initialOdomPosSet == False):
 				self.initialOdomPos = self.lastOdomPos
 				self.initialOdomPosSet = True
 			self.update()
-			
-	def wallCallback(self,w):
-		self.lastWallDetect = w
 
 	def execute(self, goal):
 		self.speed = goal.speed
