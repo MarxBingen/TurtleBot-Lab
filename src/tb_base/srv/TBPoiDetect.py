@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-from tb_base.srv import PoiDetect
+from tb_base.srv import PoiDetect, PoiDetectResponse
 
 class TBPoiDetectService:
 
@@ -21,13 +21,13 @@ class TBPoiDetectService:
 		self.s = rospy.Service('PoiDetectService', PoiDetect, self.detect)
 		print "PoiDetectService gestartet"
 
-	def detect(self):
+	def detect(self,req):
 		try:
 			data = rospy.wait_for_message('/camera/rgb/image_color',Image,10.0)
 			imgO = self.bridge.imgmsg_to_cv2(data, "bgr8")
 		except CvBridgeError as e:
 			print(e)
-			result = PoiDetect()
+			result = PoiDetectResponse()
 			result.detected = False
 			result.color = 'Error'
 			return result
@@ -53,9 +53,10 @@ class TBPoiDetectService:
 			((x, y), radius) = cv2.minEnclosingCircle(c)
 			if radius > 70 and radius < 150:
 				detectedColor = "Red"
-		result = PoiDetect()
-		result.detected = detectColor != None
+		result = PoiDetectResponse()
+		result.detected = detectedColor != None
 		result.color = detectedColor
+		print result
 		return result
 		
 if __name__ == '__main__':
