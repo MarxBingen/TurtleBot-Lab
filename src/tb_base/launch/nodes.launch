@@ -3,5 +3,6 @@
 	<node pkg="tb_base" name="TBWallDetection" type="TBWallDetection.py" output="screen" />
 	<node pkg="tb_base" name="TBPoiDetect" type="TBPoiDetect.py" output="screen" />
 	<node pkg="tb_base" name="TBDriveForward" type="TBDriveForward.py" output="screen"/>
+	<node pkg="tb_base" name="TBTurnAround" type="TBTurnAround.py" output="screen"/>
 
 </launch>
