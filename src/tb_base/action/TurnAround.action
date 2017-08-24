@@ -1,9 +1,9 @@
 # Define the goal
-uint32 degrees  # in grad, wie weit gedreht werden soll 
-float32 speed	#in grad pro sekunde
+int32 degrees  # in grad, wie weit gedreht werden soll 
+int32 speed	#in grad pro sekunde
 ---
 # Define the result
-uint32 degrees_turned
+int32 degrees_turned
 bool canceled	#true, wenn abgebrochen, z.B. durch Wand
 ---
 # Define a feedback message
