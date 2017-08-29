@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
   actionlib_msgs
   actionlib
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -60,6 +61,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
    FILES
    PoiDetect.srv
+   MapDriven.srv
+   MapTurned.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -74,6 +77,7 @@ generate_messages(
    DEPENDENCIES
    actionlib_msgs
    std_msgs
+   geometry_msgs
 )
 
 ################################################

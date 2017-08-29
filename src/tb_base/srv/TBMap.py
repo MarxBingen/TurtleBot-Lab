@@ -8,6 +8,7 @@ import tf2_ros
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped,Pose,Point,TransformStamped,Quaternion
+from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse
 
 class TBMap:
 
@@ -28,14 +29,22 @@ class TBMap:
 		#Ausgangsposition auf null setzen
 		self.posX = size
 		self.posY = size
+		#services starten
+		self.sd = rospy.Service('MapServiceDriven', MapDriven, self.driven)
+		self.st = rospy.Service('MapServiceTurned', MapTurned, self.turned)
 		self.mapPub = rospy.Publisher('mapLab',OccupancyGrid,queue_size=1)
 		self.tfPub = tf2_ros.TransformBroadcaster()
 		self.posePub = rospy.Publisher('myPose',PoseStamped,queue_size=1)
 
 
-	def turned(self,richtung):
-		self.heading = SimpleHeading.turn(self.heading,richtung)
-		#print self.heading
+	def turned(self,request):
+		#self.heading = SimpleHeading.turn(self.heading,richtung)
+		print self.request
+		return MapTurnedResponse()
+		
+	def driven(self,request):
+		print request
+		return MapDrivenResponse()
 
 	def printPosition(self):
 		#pass
@@ -56,8 +65,6 @@ class TBMap:
 		p = PoseStamped()
 		p.header.frame_id = "mapLab"
 		p.header.stamp = rospy.Time.now()
-		p.pose.position.x = self.posX
-		p.pose.position.y = self.posY
 		p.pose.position.x=((self.posX-self.size)*self.raster)+(self.raster/2)
 		p.pose.position.y=((self.posY-self.size)*self.raster)+(self.raster/2)
 		p.pose.orientation.x = orientation[0]
@@ -69,8 +76,8 @@ class TBMap:
 		t.child_frame_id = "base_footprint"
 		t.header.frame_id = "mapLab"
 		t.header.stamp = rospy.Time.now()
-		t.transform.translation.x=((self.posX-self.size)*self.raster)+(self.raster/2)
-		t.transform.translation.y=((self.posY-self.size)*self.raster)+(self.raster/2)
+		t.transform.translation.x=p.pose.position.x
+		t.transform.translation.y=p.pose.position.y
 		t.transform.rotation = p.pose.orientation
 		#q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
 		#t.transform.rotation.x=q[0]
@@ -165,4 +172,18 @@ class TBMap:
 		self.map.header.stamp = rospy.Time.now()
 		self.map.data=self.mapArray
 		if not rospy.is_shutdown():
-			self.mapPub.publish(self.map) 
+			self.mapPub.publish(self.map)
+			
+if __name__ =='__main__':
+	rospy.init_node('MapService')
+	try:
+		r = rospy.get_param('~raster')
+	except:
+		print "Nutze default Raster 0.38"
+		r = 0.38
+	try:
+		s = rospy.get_param('~size')
+	except:
+		s = int(math.ceil(10/r))
+	server = TBMap(s,r)
+	rospy.spin()

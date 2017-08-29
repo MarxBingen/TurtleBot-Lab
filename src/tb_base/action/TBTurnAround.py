@@ -83,6 +83,7 @@ class TBTurnAroundServer:
 			self.status = 'Stopped'
 			self.initialOdomPosSet = False
 			self.result.degrees_turned = abs(self.initial_heading - self.new_heading)
+			self.result.new_heading = sh
 			self.result.canceled = False
 			self.internalZeroAngular()
 			self.server.set_succeeded(self.result)

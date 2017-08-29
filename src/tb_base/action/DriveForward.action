@@ -4,6 +4,7 @@ float32 speed	#in m pro sekunde
 ---
 # Define the result
 uint32 distance_driven
+geometry_msgs/Point position
 bool canceled	#true, wenn abgebrochen, z.B. durch Wand
 ---
 # Define a feedback message

@@ -3,6 +3,7 @@ int32 degrees  # in grad, wie weit gedreht werden soll
 int32 speed	#in grad pro sekunde
 ---
 # Define the result
+int32 new_heading #neues heading
 int32 degrees_turned
 bool canceled	#true, wenn abgebrochen, z.B. durch Wand
 ---
