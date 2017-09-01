@@ -1,31 +1,39 @@
 #!/usr/bin/env python
-
+"""Module for Heading Stuff"""
 from enum import Enum
 import math
 
 class SimpleHeading(Enum):
-	NORD = 1
-	OST = 2
-	SUED = 3
-	WEST = 4 
+    """A Simple Class for dealing with simple Headings"""
+    NORD = 1
+    OST = 2
+    SUED = 3
+    WEST = 4
 
-	def turn(oldHeading,richtung):
-		nv = oldHeading.value - 1 if richtung=='links' else oldHeading.value+1
-		if (nv < 1):
-			nv = 4
-		if (nv > 4):
-			nv = 1
-		return SimpleHeading(nv)
+    @staticmethod
+    def from_degrees(degrees):
+        """Changes heading depending on richtung"""
+        newheading = SimpleHeading.NORD
+        if degrees >= 315 and degrees < 45:
+            return SimpleHeading.NORD
+        if degrees >= 45 and degrees < 135:
+            return SimpleHeading.OST
+        if degrees >= 135 and degrees < 225:
+            return SimpleHeading.SUED
+        if degrees >= 225 and degrees < 315:
+            return SimpleHeading.WEST
+        return newheading
 
-	def yaw(heading):
-		y = 0
-		if (heading is SimpleHeading.NORD):
-			y = math.pi/2.0
-		elif heading is SimpleHeading.WEST:
-			y = math.pi
-		elif heading is SimpleHeading.SUED:
-			y= -math.pi/2.0
-		elif heading is SimpleHeading.OST:
-			y= 2*math.pi
-		return y
-
+    @staticmethod
+    def yaw(heading):
+        """Returns yaw from current heading"""
+        new_yaw = 0
+        if heading is SimpleHeading.NORD:
+            new_yaw = math.pi / 2.0
+        elif heading is SimpleHeading.WEST:
+            new_yaw = math.pi
+        elif heading is SimpleHeading.SUED:
+            new_yaw = -math.pi / 2.0
+        elif heading is SimpleHeading.OST:
+            new_yaw = 2 * math.pi
+        return new_yaw
