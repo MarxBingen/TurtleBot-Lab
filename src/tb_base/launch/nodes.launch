@@ -5,7 +5,7 @@
 	<node pkg="tb_base" name="TBDriveForward" type="TBDriveForward.py" output="screen"/>
 	<node pkg="tb_base" name="TBTurnAround" type="TBTurnAround.py" output="screen"/>
 	<node pkg="tb_base" name="TBMap" type="TBMap.py" output="screen">
-		<arg name="raster" value="0.38" />
+		<param name="raster" value="0.38" />
 	</node>
 
 </launch>

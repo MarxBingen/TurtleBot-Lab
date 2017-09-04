@@ -79,8 +79,7 @@ class TBDriveForwardServer:
                 self.movePub.publish(Twist())
                 print "Stop vor Wand"
                 self.status = 'Stopped'
-                self.result.distance_driven = dist = math.hypot(
-                    odomDiffX, odomDiffY)
+                self.result.distance_driven = math.hypot(odomDiffX, odomDiffY)
                 self.result.position = cop.pose.position
                 self.result.canceled = True
                 self.server.set_aborted(self.result, 'Stop vor Wand')

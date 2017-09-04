@@ -65,7 +65,7 @@ class TBMap(object):
                              self.raster) + (self.raster / 2)
         p.pose.position.y = ((self.pos_y - self.size) *
                              self.raster) + (self.raster / 2)
-        q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
+        q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading_simple))
         p.pose.orientation.x = q[0]
         p.pose.orientation.y = q[1]
         p.pose.orientation.z = q[2]
@@ -94,21 +94,21 @@ class TBMap(object):
         s = self.size * 2
         self.map_array[pos_y * s + pos_x] = 0
         if self.heading_simple is SimpleHeading.NORD:
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if feldbelegung.mitte == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if feldbelegung.links == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if feldbelegung.rechts == 'Frei' else 100
+            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.front else 100
+            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.left == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.right == 'Frei' else 100
         elif self.heading_simple is SimpleHeading.SUED:
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if feldbelegung.mitte == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if feldbelegung.links == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if feldbelegung.rechts == 'Frei' else 100
+            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.front == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.left == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.right == 'Frei' else 100
         elif self.heading_simple is SimpleHeading.WEST:
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if feldbelegung.mitte == 'Frei' else 100
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if feldbelegung.links == 'Frei' else 100
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if feldbelegung.rechts == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.front == 'Frei' else 100
+            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.left == 'Frei' else 100
+            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.right == 'Frei' else 100
         elif self.heading_simple is SimpleHeading.OST:
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if feldbelegung.mitte == 'Frei' else 100
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if feldbelegung.links == 'Frei' else 100
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if feldbelegung.rechts == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.front == 'Frei' else 100
+            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.left == 'Frei' else 100
+            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.right == 'Frei' else 100
         #update map published to ROS
         self.updateOccupancyGrid()
 

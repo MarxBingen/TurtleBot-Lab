@@ -8,6 +8,7 @@ import numpy as np
 import tf
 
 from sensor_msgs.msg import Imu
+from nav_msgs.msg import Odometry
 
 initial = None
 initialSet = False
@@ -33,9 +34,12 @@ def imuCallback(data):
 	yaw = 180 - (math.degrees(math.atan2(s3,s4)))
 	print qz,qw,yaw
 
+def odomCallback(data):
+	print data
 
 if __name__ == '__main__':
 	rospy.init_node('ImuReader')
-	magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,imuCallback)
+	#magSub = rospy.Subscriber('mobile_base/sensors/imu_data',Imu,imuCallback)
+	magSub = rospy.Subscriber('odom',Odometry,odomCallback)
 	rospy.spin()
 
