@@ -43,29 +43,21 @@ class TBMap(object):
     def turned(self, request):
         """Callback for MapServiceTurned"""
         self.heading_simple = SimpleHeading.from_degrees(request.new_heading)
+        self.updateMap()
         return MapTurnedResponse()
 
     def driven(self, request):
         """Callback for MapServiceDriven"""
         self.pos_x = int(request.position.x)
         self.pos_y = int(request.position.y)
+        self.updateMap()
         return MapDrivenResponse()
 
     def print_position(self):
         print "Position:", self.pos_x - self.size, self.pos_y - self.size
         print "Heading:", self.heading_simple
 
-    def update_position(self, step):
-        if self.heading_simple is SimpleHeading.NORD:
-            self.pos_y = self.pos_y + step
-        elif self.heading_simple is SimpleHeading.SUED:
-            self.pos_y = self.pos_y - step
-        elif self.heading_simple is SimpleHeading.WEST:
-            self.pos_x = self.pos_x - step
-        elif self.heading_simple is SimpleHeading.OST:
-            self.pos_x = self.pos_x + step
-
-    def broadcastMapToOdomTF(self, orientation):
+    def broadcastMapToOdomTF(self):
         p = PoseStamped()
         p.header.frame_id = "mapLab"
         p.header.stamp = rospy.Time.now()
@@ -73,10 +65,11 @@ class TBMap(object):
                              self.raster) + (self.raster / 2)
         p.pose.position.y = ((self.pos_y - self.size) *
                              self.raster) + (self.raster / 2)
-        p.pose.orientation.x = orientation[0]
-        p.pose.orientation.y = orientation[1]
-        p.pose.orientation.z = orientation[2]
-        p.pose.orientation.w = orientation[3]
+        q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
+        p.pose.orientation.x = q[0]
+        p.pose.orientation.y = q[1]
+        p.pose.orientation.z = q[2]
+        p.pose.orientation.w = q[3]
         # broadcast map to odom transform
         t = TransformStamped()
         t.child_frame_id = "base_footprint"
@@ -85,11 +78,7 @@ class TBMap(object):
         t.transform.translation.x = p.pose.position.x
         t.transform.translation.y = p.pose.position.y
         t.transform.rotation = p.pose.orientation
-        #q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading))
-        # t.transform.rotation.x=q[0]
-        # t.transform.rotation.y=q[1]
-        # t.transform.rotation.z=q[2]
-        # t.transform.rotation.w=q[3]
+        
         if not rospy.is_shutdown():
             self.pose_pub.publish(p)
             self.tf_pub.sendTransform(t)
@@ -123,8 +112,6 @@ class TBMap(object):
         #update map published to ROS
         self.updateOccupancyGrid()
 
-    
-
     def updateOccupancyGrid(self):
         self.map.info.resolution = self.raster
         self.map.info.width = self.size * 2
@@ -135,9 +122,7 @@ class TBMap(object):
         self.map.header.frame_id = "mapLab"
         self.map.header.stamp = rospy.Time.now()
         self.map.data = self.map_array
-        if not rospy.is_shutdown():
-            self.map_pub.publish(self.map)
-
+        self.map_pub.publish(self.map)
 
 if __name__ == '__main__':
     rospy.init_node('MapService')
