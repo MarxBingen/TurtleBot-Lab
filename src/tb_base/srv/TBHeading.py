@@ -2,6 +2,7 @@
 """Module for Heading Stuff"""
 from enum import Enum
 import math
+import tf
 
 class SimpleHeading(Enum):
     """A Simple Class for dealing with simple Headings"""
@@ -11,7 +12,7 @@ class SimpleHeading(Enum):
     WEST = 4
 
     @staticmethod
-    def from_degrees(degrees):
+    def from_degrees360(degrees):
         """Changes heading depending on richtung"""
         newheading = SimpleHeading.NORD
         if degrees >= 315 and degrees < 45:
@@ -25,15 +26,29 @@ class SimpleHeading(Enum):
         return newheading
 
     @staticmethod
+    def from_quaternion(quat):
+        (r, p, y) = tf.transformations.euler_from_quaternion([quat.x, quat.y, quat.z, quat.w])
+        y = y * (180/math.pi)
+        if -45 <= y < 45:
+            return SimpleHeading.NORD
+        if -135 <= y < -45:
+            return SimpleHeading.OST
+        if 45 <= y < 135:
+            return SimpleHeading.WEST
+        if 135 <= y or y < -135:
+            return SimpleHeading.SUED
+        return SimpleHeading.NORD
+
+    @staticmethod
     def yaw(heading):
         """Returns yaw from current heading"""
         new_yaw = 0
         if heading is SimpleHeading.NORD:
-            new_yaw = math.pi / 2.0
+            new_yaw = 0
         elif heading is SimpleHeading.WEST:
-            new_yaw = math.pi
+            new_yaw = math.pi / 2.0
         elif heading is SimpleHeading.SUED:
-            new_yaw = -math.pi / 2.0
+            new_yaw = math.pi
         elif heading is SimpleHeading.OST:
-            new_yaw = 2 * math.pi
+            new_yaw = math.pi / -2.0
         return new_yaw

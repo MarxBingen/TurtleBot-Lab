@@ -5,6 +5,7 @@ import actionlib
 import math
 
 from tb_base.msg import DriveForwardAction, DriveForwardFeedback, DriveForwardResult, WallDetection
+from tb_base.srv import MapDriven
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist, Point
 
@@ -17,25 +18,29 @@ class TBDriveForwardServer:
     lastWallDetect = None
     feedback = DriveForwardFeedback()
     result = DriveForwardResult()
-    mapService = None
+    mapServiceD = None
 
     def __init__(self):
         print "DriveForwardActionServer wird initialisiert"
         self.server = actionlib.SimpleActionServer(
             'DriveForward', DriveForwardAction, auto_start=False)
         # Subscribe to Odom und Bumper
-        self.odomSub = rospy.Subscriber(
-            'odom', Odometry, queue_size=1, callback=self.odomCallback)
+        self.odomSub = rospy.Subscriber('odom', Odometry, queue_size=1, callback=self.odomCallback)
         self.wallSub = rospy.Subscriber('wallDetection', WallDetection, queue_size=1, callback=self.wallCallback)
         self.movePub = rospy.Publisher('cmd_vel_mux/input/safety_controller', Twist, queue_size=1)
-        #self.mapServiceD = rospy.ServiceProxy('MapServiceDriven', AddTwoInts)
+        #MapService verknuepfen
+        print "Verbinde mit MapService..."
+        rospy.wait_for_service('MapServiceDriven')
+        self.mapServiceD = rospy.ServiceProxy('MapServiceDriven', MapDriven)
+        print "MapService gefunden"
+        #erst jetzt fuer Goals registrieren
         self.server.register_goal_callback(self.new_goal_callback)
         # Server starten
         self.server.start()
         print "DriveForwardActionServer wurde gestartet"
 
     def odomCallback(self, odom):
-        self.lastOdomPos = odom.pose.pose.position
+        self.lastOdomPos = odom
 
     def wallCallback(self, w):
         self.lastWallDetect = w
@@ -58,15 +63,17 @@ class TBDriveForwardServer:
         twist.linear.x = self.speed
         sop = self.initialOdomPos
         cop = self.lastOdomPos
-        odomDiffX = abs(sop.x - cop.x)
-        odomDiffY = abs(sop.y - cop.y)
+        odomDiffX = abs(sop.pose.pose.position.x - cop.pose.pose.position.x)
+        odomDiffY = abs(sop.pose.pose.position.y - cop.pose.pose.position.y)
         if odomDiffX > self.distance or odomDiffY > self.distance:
             print "Gefahren"
             self.status = 'Stopped'
             self.initialOdomPosSet = False
+            self.result = DriveForwardResult()
             self.result.distance_driven = self.distance * 100
             self.result.canceled = False
-            self.result.position = cop.pose.position
+            self.result.position = cop.pose.pose.position
+            self.mapServiceD(cop)
             self.server.set_succeeded(self.result)
             return
         w = self.lastWallDetect
@@ -79,8 +86,9 @@ class TBDriveForwardServer:
                 self.movePub.publish(Twist())
                 print "Stop vor Wand"
                 self.status = 'Stopped'
-                self.result.distance_driven = math.hypot(odomDiffX, odomDiffY)
-                self.result.position = cop.pose.position
+                self.result.distance_driven = math.hypot(odomDiffX, odomDiffY)*100
+                self.result.position = cop.pose.pose.position
+                self.mapServiceD(cop)
                 self.result.canceled = True
                 self.server.set_aborted(self.result, 'Stop vor Wand')
                 return
@@ -91,5 +99,5 @@ class TBDriveForwardServer:
 
 if __name__ == '__main__':
     rospy.init_node('DriveForwardServer')
-    server = TBDriveForwardServer()
+    SERVER = TBDriveForwardServer()
     rospy.spin()

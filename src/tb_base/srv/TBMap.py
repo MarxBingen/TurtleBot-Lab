@@ -8,7 +8,7 @@ import tf2_ros
 
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
-from geometry_msgs.msg import PoseStamped, Pose, Point, TransformStamped, Quaternion
+from geometry_msgs.msg import PoseStamped, Pose, Point, TransformStamped
 from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse
 from tb_base.msg import WallDetection
 
@@ -42,30 +42,30 @@ class TBMap(object):
 
     def turned(self, request):
         """Callback for MapServiceTurned"""
-        self.heading_simple = SimpleHeading.from_degrees(request.new_heading)
+        self.heading_simple = SimpleHeading.from_quaternion(request.odom.pose.pose.orientation)
         self.updateMap()
         return MapTurnedResponse()
 
     def driven(self, request):
         """Callback for MapServiceDriven"""
-        self.pos_x = int(request.position.x)
-        self.pos_y = int(request.position.y)
+        print request.odom.pose.pose.position
+        self.pos_x = int(request.odom.pose.pose.position.x / self.raster)
+        self.pos_y = int(request.odom.pose.pose.position.y / self.raster)
+        self.print_position()
         self.updateMap()
         return MapDrivenResponse()
 
     def print_position(self):
-        print "Position:", self.pos_x - self.size, self.pos_y - self.size
+        print "Position:", self.pos_x,self.pos_y
         print "Heading:", self.heading_simple
 
     def broadcastMapToOdomTF(self):
         p = PoseStamped()
         p.header.frame_id = "mapLab"
         p.header.stamp = rospy.Time.now()
-        p.pose.position.x = ((self.pos_x - self.size) *
-                             self.raster) + (self.raster / 2)
-        p.pose.position.y = ((self.pos_y - self.size) *
-                             self.raster) + (self.raster / 2)
-        q = tf.transformations.quaternion_from_euler(0,0,SimpleHeading.yaw(self.heading_simple))
+        p.pose.position.x = (self.pos_x * self.raster) + (self.raster / 2.0)
+        p.pose.position.y = (self.pos_y * self.raster) + (self.raster / 2.0)
+        q = tf.transformations.quaternion_from_euler(0, 0, SimpleHeading.yaw(self.heading_simple))
         p.pose.orientation.x = q[0]
         p.pose.orientation.y = q[1]
         p.pose.orientation.z = q[2]
@@ -85,8 +85,8 @@ class TBMap(object):
 
     def updateMap(self):
         feldbelegung = rospy.wait_for_message('wallDetection', WallDetection, 2.0)
-        pos_x = self.pos_x
-        pos_y = self.pos_y
+        pos_x = self.pos_x + self.size
+        pos_y = self.pos_y + self.size
         #update Dijkstra
         #TODO: should not be done here, consider independent node
         #self.update_dijkstra(pos_x, pos_y, feldbelegung)
@@ -122,6 +122,7 @@ class TBMap(object):
         self.map.header.frame_id = "mapLab"
         self.map.header.stamp = rospy.Time.now()
         self.map.data = self.map_array
+        self.broadcastMapToOdomTF()
         self.map_pub.publish(self.map)
 
 if __name__ == '__main__':

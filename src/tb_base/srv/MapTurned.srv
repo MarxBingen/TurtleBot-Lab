@@ -1,2 +1,2 @@
-int32 new_heading
+nav_msgs/Odometry odom
 ---
