@@ -10,6 +10,7 @@ import actionlib
 
 
 from tb_base.msg import DriveForwardAction, DriveForwardActionGoal, TurnAroundActionGoal, TurnAroundAction
+from tb_base.msg import WallDetection
 
 
 class TBLogic(object):
@@ -48,10 +49,17 @@ class TBLogic(object):
             print self.turn_around_client.get_result()
         return completed
 
+        def check_laser(self):
+            feldbelegung = rospy.wait_for_message(
+                'wallDetection', WallDetection, 2.0)
+            return feldbelegung
+
 
 if __name__ == '__main__':
     rospy.init_node('TBLogicNode')
     xx = TBLogic()
-    xx.drive_forward(38)
-    xx.turn_around(90)
+	#TODO: remove when ready, testing only
+    while not rospy.is_shutdown():
+        xx.drive_forward(38)
+        xx.turn_around(90)
     rospy.spin()
