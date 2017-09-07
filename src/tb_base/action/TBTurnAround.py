@@ -64,7 +64,7 @@ class TBTurnAroundServer:
         twist.angular.z = self.speed
         self.movePub.publish(twist)
         sh = self.heading
-        if int(sh) == int(self.new_heading):
+        if int(sh)-1 <= int(self.new_heading) <= int(sh) + 1:
             print "Gedreht"
             self.status = 'Stopped'
             self.result.degrees_turned = abs(self.initial_heading - self.new_heading)
