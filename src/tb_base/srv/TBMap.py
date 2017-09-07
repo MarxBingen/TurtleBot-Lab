@@ -39,6 +39,8 @@ class TBMap(object):
         self.map_pub = rospy.Publisher('mapLab', OccupancyGrid, queue_size=1)
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
+        #Map leeren
+        self.updateOccupancyGrid()
 
     def turned(self, request):
         """Callback for MapServiceTurned"""
@@ -49,6 +51,7 @@ class TBMap(object):
     def driven(self, request):
         """Callback for MapServiceDriven"""
         print request.odom.pose.pose.position
+        self.heading_simple = SimpleHeading.from_quaternion(request.odom.pose.pose.orientation)
         self.pos_x = int(request.odom.pose.pose.position.x / self.raster)
         self.pos_y = int(request.odom.pose.pose.position.y / self.raster)
         self.print_position()
@@ -65,7 +68,7 @@ class TBMap(object):
         p.header.stamp = rospy.Time.now()
         p.pose.position.x = (self.pos_x * self.raster) + (self.raster / 2.0)
         p.pose.position.y = (self.pos_y * self.raster) + (self.raster / 2.0)
-        q = tf.transformations.quaternion_from_euler(0, 0, SimpleHeading.yaw(self.heading_simple))
+        q = tf.transformations.quaternion_from_euler(0, 0, math.radians(SimpleHeading.yaw(self.heading_simple)-180))
         p.pose.orientation.x = q[0]
         p.pose.orientation.y = q[1]
         p.pose.orientation.z = q[2]
@@ -85,6 +88,7 @@ class TBMap(object):
 
     def updateMap(self):
         feldbelegung = rospy.wait_for_message('wallDetection', WallDetection, 2.0)
+        print feldbelegung
         pos_x = self.pos_x + self.size
         pos_y = self.pos_y + self.size
         #update Dijkstra
@@ -94,21 +98,21 @@ class TBMap(object):
         s = self.size * 2
         self.map_array[pos_y * s + pos_x] = 0
         if self.heading_simple is SimpleHeading.NORD:
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.front else 100
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.left == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.right == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x + 1] = 100 if feldbelegung.front else 0
+            self.map_array[(pos_y + 1) * s + pos_x] = 100 if feldbelegung.left else 0
+            self.map_array[(pos_y - 1) * s + pos_x] = 100 if feldbelegung.right else 0
         elif self.heading_simple is SimpleHeading.SUED:
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.front == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.left == 'Frei' else 100
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.right == 'Frei' else 100
+            self.map_array[(pos_y) * s + pos_x - 1] = 100 if feldbelegung.front else 0
+            self.map_array[(pos_y - 1) * s + pos_x] = 100 if feldbelegung.left else 0
+            self.map_array[(pos_y + 1) * s + pos_x] = 100 if feldbelegung.right else 0
         elif self.heading_simple is SimpleHeading.WEST:
-            self.map_array[(pos_y) * s + pos_x - 1] = 0 if not feldbelegung.front == 'Frei' else 100
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.left == 'Frei' else 100
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.right == 'Frei' else 100
+            self.map_array[(pos_y + 1) * s + pos_x] = 100 if feldbelegung.front else 0
+            self.map_array[(pos_y) * s + pos_x - 1] = 100 if feldbelegung.left else 0
+            self.map_array[(pos_y) * s + pos_x + 1] = 100 if feldbelegung.right else 0
         elif self.heading_simple is SimpleHeading.OST:
-            self.map_array[(pos_y) * s + pos_x + 1] = 0 if not feldbelegung.front == 'Frei' else 100
-            self.map_array[(pos_y + 1) * s + pos_x] = 0 if not feldbelegung.left == 'Frei' else 100
-            self.map_array[(pos_y - 1) * s + pos_x] = 0 if not feldbelegung.right == 'Frei' else 100
+            self.map_array[(pos_y - 1) * s + pos_x] = 100 if feldbelegung.front else 0
+            self.map_array[(pos_y) * s + pos_x + 1] = 100 if feldbelegung.left else 0
+            self.map_array[(pos_y) * s + pos_x - 1] = 100 if feldbelegung.right else 0
         #update map published to ROS
         self.updateOccupancyGrid()
 

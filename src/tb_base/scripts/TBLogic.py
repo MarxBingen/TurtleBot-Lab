@@ -1,11 +1,6 @@
 #!/usr/bin/env python
 
 import rospy
-import sys
-import time
-import math
-import numpy as np
-import tf
 import actionlib
 
 
@@ -49,17 +44,32 @@ class TBLogic(object):
             print self.turn_around_client.get_result()
         return completed
 
-        def check_laser(self):
-            feldbelegung = rospy.wait_for_message(
-                'wallDetection', WallDetection, 2.0)
-            return feldbelegung
+    def check_laser(self):
+        feldbelegung = rospy.wait_for_message(
+            'wallDetection', WallDetection, 2.0)
+        return feldbelegung
+
+    def turn_left(self):
+        self.turn_around(90)
+
+    def turn_right(self):
+        self.turn_around(-90)
 
 
 if __name__ == '__main__':
     rospy.init_node('TBLogicNode')
     xx = TBLogic()
-	#TODO: remove when ready, testing only
+    # TODO: remove when ready, testing only
     while not rospy.is_shutdown():
-        xx.drive_forward(38)
-        xx.turn_around(90)
+        p = xx.check_laser()
+        if not p.right:
+            print "Drehe rechts"
+            xx.turn_right()
+            xx.drive_forward(38)
+        elif not p.front:
+            print "Fahre vorwaerts"
+            xx.drive_forward(38)
+        else:
+            print "Drehe links"
+            xx.turn_left()
     rospy.spin()
