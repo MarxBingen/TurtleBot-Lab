@@ -27,6 +27,7 @@ class TBMap(object):
     service_t = None
 
     def __init__(self, size, raster):
+        print "Starte MapService"
         self.size = size
         self.raster = raster
         self.map_array = [-1] * (size * 2 * size * 2)
@@ -40,7 +41,9 @@ class TBMap(object):
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
         #Map leeren
+        rospy.sleep(rospy.Duration(2))
         self.updateOccupancyGrid()
+        print "MapService gestartet"
 
     def turned(self, request):
         """Callback for MapServiceTurned"""

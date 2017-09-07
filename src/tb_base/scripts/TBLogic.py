@@ -6,6 +6,7 @@ import actionlib
 
 from tb_base.msg import DriveForwardAction, DriveForwardActionGoal, TurnAroundActionGoal, TurnAroundAction
 from tb_base.msg import WallDetection
+from std_msgs.msg import Empty
 
 
 class TBLogic(object):
@@ -13,6 +14,9 @@ class TBLogic(object):
     drive_forward_client = None
 
     def __init__(self):
+        #Odom resetten
+        odom_reset = rospy.Publisher('/mobile_base/commands/reset_odometry',Empty , queue_size=1)
+        odom_reset.publish(Empty())
         self.drive_forward_client = actionlib.SimpleActionClient(
             'DriveForward', DriveForwardAction)
         self.turn_around_client = actionlib.SimpleActionClient(
