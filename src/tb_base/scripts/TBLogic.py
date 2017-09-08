@@ -17,6 +17,7 @@ class TBLogic(object):
         #Odom resetten
         odom_reset = rospy.Publisher('/mobile_base/commands/reset_odometry',Empty , queue_size=1)
         odom_reset.publish(Empty())
+        odom_reset.unregister()
         self.drive_forward_client = actionlib.SimpleActionClient(
             'DriveForward', DriveForwardAction)
         self.turn_around_client = actionlib.SimpleActionClient(
@@ -25,6 +26,8 @@ class TBLogic(object):
         self.turn_around_client.wait_for_server()
 
     def drive_forward(self, strecke):
+        '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
+        gefahren, muss also zum stop gecancelled werden'''
         goal = DriveForwardActionGoal()
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
@@ -37,6 +40,8 @@ class TBLogic(object):
         return completed
 
     def turn_around(self, winkel):
+        #es wird eine etwaige forward-action gestoppt
+        self.drive_forward_client.cancel_goal()
         goal = TurnAroundActionGoal()
         goal.goal.degrees = winkel
         goal.goal.speed = 45

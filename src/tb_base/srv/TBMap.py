@@ -55,8 +55,8 @@ class TBMap(object):
         """Callback for MapServiceDriven"""
         print request.odom.pose.pose.position
         self.heading_simple = SimpleHeading.from_quaternion(request.odom.pose.pose.orientation)
-        self.pos_x = int(request.odom.pose.pose.position.x / self.raster)
-        self.pos_y = int(request.odom.pose.pose.position.y / self.raster)
+        self.pos_x = int(round(request.odom.pose.pose.position.x / self.raster))
+        self.pos_y = int(round(request.odom.pose.pose.position.y / self.raster))
         self.print_position()
         self.updateMap()
         return MapDrivenResponse()
