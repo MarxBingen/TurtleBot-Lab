@@ -53,11 +53,11 @@ class TBMap(object):
 
     def driven(self, request):
         """Callback for MapServiceDriven"""
-        print request.odom.pose.pose.position
+        #print request.odom.pose.pose.position
         self.heading_simple = SimpleHeading.from_quaternion(request.odom.pose.pose.orientation)
         self.pos_x = int(round(request.odom.pose.pose.position.x / self.raster))
         self.pos_y = int(round(request.odom.pose.pose.position.y / self.raster))
-        self.print_position()
+        #self.print_position()
         self.updateMap()
         return MapDrivenResponse()
 
@@ -91,7 +91,7 @@ class TBMap(object):
 
     def updateMap(self):
         feldbelegung = rospy.wait_for_message('wallDetection', WallDetection, 2.0)
-        print feldbelegung
+        #print feldbelegung
         pos_x = self.pos_x + self.size
         pos_y = self.pos_y + self.size
         #update Dijkstra

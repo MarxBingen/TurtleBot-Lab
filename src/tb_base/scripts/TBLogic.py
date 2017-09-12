@@ -31,6 +31,7 @@ class TBLogic(object):
         goal = DriveForwardActionGoal()
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
+        goal.goal.stop = False
         # Sends the goal to the action server.
         self.drive_forward_client.send_goal(goal.goal)
         # Waits for the server to finish performing the action.
@@ -41,7 +42,7 @@ class TBLogic(object):
 
     def turn_around(self, winkel):
         #es wird eine etwaige forward-action gestoppt
-        self.drive_forward_client.cancel_goal()
+        self.stop_driving()
         goal = TurnAroundActionGoal()
         goal.goal.degrees = winkel
         goal.goal.speed = 45
@@ -57,6 +58,19 @@ class TBLogic(object):
         feldbelegung = rospy.wait_for_message(
             'wallDetection', WallDetection, 2.0)
         return feldbelegung
+
+    def stop_driving(self):
+        goal = DriveForwardActionGoal()
+        goal.goal.distance = 0
+        goal.goal.speed = 0.2
+        goal.goal.stop = True
+        # Sends the goal to the action server.
+        self.drive_forward_client.send_goal(goal.goal)
+        # Waits for the server to finish performing the action.
+        completed = self.drive_forward_client.wait_for_result()
+        if completed:
+            print self.drive_forward_client.get_result()
+        return completed
 
     def turn_left(self):
         self.turn_around(90)

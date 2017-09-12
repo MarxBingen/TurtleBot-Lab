@@ -18,17 +18,16 @@ class TBDriveForwardServer:
 
     initialOdomPosSet = False
     initialOdomPos = None
+    lastOdomPos = None
     status = 'Stopped'
     lastWallDetect = None
     feedback = DriveForwardFeedback()
     result = DriveForwardResult()
     mapServiceD = None
-    current_goal = None
 
     def __init__(self):
         print "DriveForwardActionServer wird initialisiert"
-        self.server = actionlib.ActionServer(
-            'DriveForward', DriveForwardAction,self.new_goal_callback,self.cancel_goal_callback, auto_start=False)
+        self.server = actionlib.SimpleActionServer('DriveForward',DriveForwardAction,auto_start=False)
         # Subscribe to Odom und Bumper
         self.odomSub = rospy.Subscriber('odom', Odometry, queue_size=1, callback=self.odomCallback)
         self.wallSub = rospy.Subscriber('wallDetection', WallDetection, queue_size=1, callback=self.wallCallback)
@@ -38,7 +37,7 @@ class TBDriveForwardServer:
         rospy.wait_for_service('MapServiceDriven')
         self.mapServiceD = rospy.ServiceProxy('MapServiceDriven', MapDriven)
         print "MapService gefunden"
-        #erst jetzt fuer Goals registrieren
+        #new goal callback registrieren
         self.server.register_goal_callback(self.new_goal_callback)
         # Server starten
         self.server.start()
@@ -49,35 +48,30 @@ class TBDriveForwardServer:
 
     def wallCallback(self, w):
         self.lastWallDetect = w
-        if (self.status == 'Driving'):
+        if not self.status == 'Stopped':
             if (self.initialOdomPosSet == False):
                 self.initialOdomPos = self.lastOdomPos
                 self.initialOdomPosSet = True
             self.update()
 
-    def cancel_goal_callback(self):
-        print "Stopping..."
-        self.status='Stopped'
-        if self.current_goal:
-            sop = self.initialOdomPos
-            cop = self.lastOdomPos
-            odomDiffX = abs(sop.pose.pose.position.x - cop.pose.pose.position.x)
-            odomDiffY = abs(sop.pose.pose.position.y - cop.pose.pose.position.y)
-            self.result = DriveForwardResult()
-            self.result.distance_driven = math.hypot(odomDiffX, odomDiffY)*100
-            self.result.position = cop.pose.pose.position
-            self.result.canceled = True
-            self.server.publish_result(GoalStatus.ABORTED, self.result)
-            self.current_goal.set_cancelled(self.result)
-
-    def new_goal_callback(self,goal_handle):
-        # TODO: wenn noch ein goal active is, dann noch anpassen
-        goal_handle.set_accepted()
-        g = goal_handle.get_goal()
-        self.current_goal = goal_handle
+    def new_goal_callback(self):
+        g = self.server.accept_new_goal()
+        print g
         self.speed = g.speed
         self.distance = g.distance / 100.0
-        self.status = 'Driving'
+        if g.stop == True:
+            self.status = 'Stopped'
+            self.movePub.publish(Twist())
+            self.mapServiceD(self.lastOdomPos)
+            self.result = DriveForwardResult()
+            self.result.distance_driven = self.distance * 100
+            self.result.canceled = False
+            self.result.position = self.lastOdomPos.pose.pose.position
+            self.server.set_aborted(self.result)
+            print "Stopped by Command"
+        else:
+            self.initialOdomPosSet = False
+            self.status = 'Driving'
 
     def update(self):
         twist = Twist()
@@ -86,18 +80,16 @@ class TBDriveForwardServer:
         cop = self.lastOdomPos
         odomDiffX = abs(sop.pose.pose.position.x - cop.pose.pose.position.x)
         odomDiffY = abs(sop.pose.pose.position.y - cop.pose.pose.position.y)
-        if odomDiffX > self.distance or odomDiffY > self.distance:
+        if self.status == 'Driving' and (odomDiffX > self.distance or odomDiffY > self.distance):
             print "Gefahren"
-            self.status = 'Stopped'
+            self.status = 'Done'
+            self.mapServiceD(cop)
             self.initialOdomPosSet = False
             self.result = DriveForwardResult()
             self.result.distance_driven = self.distance * 100
             self.result.canceled = False
             self.result.position = cop.pose.pose.position
-            self.mapServiceD(cop)
-            if self.current_goal:
-                self.current_goal.set_succeeded(self.result)
-            return
+            self.server.set_succeeded(self.result)
         w = self.lastWallDetect
         if (not w == None):
             if w.close == 3:
@@ -113,12 +105,13 @@ class TBDriveForwardServer:
                 self.result.position = cop.pose.pose.position
                 self.mapServiceD(cop)
                 self.result.canceled = True
-                if self.current_goal:
-                    self.current_goal.set_aborted(self.result, 'Stop vor Wand')
-                return
+                self.server.set_aborted(self.result)
         else:
             twist.angular.z = 0.0
-        self.movePub.publish(twist)
+        if not self.status = 'Stopped':
+            self.movePub.publish(twist)
+        else:
+            self.movePub.publish(Twist())
 
 if __name__ == '__main__':
     rospy.init_node('DriveForwardServer')
