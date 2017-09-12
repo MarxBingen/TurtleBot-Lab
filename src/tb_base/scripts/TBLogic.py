@@ -32,10 +32,7 @@ class TBLogic(object):
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
         goal.goal.stop = False
-        # Sends the goal to the action server.
-        self.drive_forward_client.send_goal(goal.goal)
-        # Waits for the server to finish performing the action.
-        completed = self.drive_forward_client.wait_for_result()
+        completed = self.drive_forward_client.send_goal_and_wait(goal.goal)
         if completed:
             print self.drive_forward_client.get_result()
         return completed
@@ -46,10 +43,7 @@ class TBLogic(object):
         goal = TurnAroundActionGoal()
         goal.goal.degrees = winkel
         goal.goal.speed = 45
-        # Sends the goal to the action server.
-        self.turn_around_client.send_goal(goal.goal)
-        # Waits for the server to finish performing the action.
-        completed = self.turn_around_client.wait_for_result()
+        completed = self.turn_around_client.send_goal_and_wait(goal.goal)
         if completed:
             print self.turn_around_client.get_result()
         return completed
@@ -64,10 +58,7 @@ class TBLogic(object):
         goal.goal.distance = 0
         goal.goal.speed = 0.2
         goal.goal.stop = True
-        # Sends the goal to the action server.
-        self.drive_forward_client.send_goal(goal.goal)
-        # Waits for the server to finish performing the action.
-        completed = self.drive_forward_client.wait_for_result()
+        completed = self.drive_forward_client.send_goal_and_wait(goal.goal)
         if completed:
             print self.drive_forward_client.get_result()
         return completed

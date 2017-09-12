@@ -8,8 +8,6 @@ from tb_base.msg import DriveForwardAction, DriveForwardFeedback, DriveForwardRe
 from tb_base.srv import MapDriven
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from actionlib_msgs.msg import GoalStatus
-
 
 class TBDriveForwardServer:
     '''Implementiert einen ActionServer, Verwendung jedoch nicht vollstaendig wie
@@ -24,6 +22,8 @@ class TBDriveForwardServer:
     feedback = DriveForwardFeedback()
     result = DriveForwardResult()
     mapServiceD = None
+    speed = 0.0
+    distance = 0
 
     def __init__(self):
         print "DriveForwardActionServer wird initialisiert"
@@ -108,7 +108,7 @@ class TBDriveForwardServer:
                 self.server.set_aborted(self.result)
         else:
             twist.angular.z = 0.0
-        if not self.status = 'Stopped':
+        if not self.status == 'Stopped':
             self.movePub.publish(twist)
         else:
             self.movePub.publish(Twist())
