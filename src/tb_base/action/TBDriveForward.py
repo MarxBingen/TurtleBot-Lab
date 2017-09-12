@@ -8,6 +8,7 @@ from tb_base.msg import DriveForwardAction, DriveForwardFeedback, DriveForwardRe
 from tb_base.srv import MapDriven
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
+from actionlib_msgs.msg import GoalStatus
 
 class TBDriveForwardServer:
     '''Implementiert einen ActionServer, Verwendung jedoch nicht vollstaendig wie
@@ -31,7 +32,7 @@ class TBDriveForwardServer:
         # Subscribe to Odom und Bumper
         self.odomSub = rospy.Subscriber('odom', Odometry, queue_size=1, callback=self.odomCallback)
         self.wallSub = rospy.Subscriber('wallDetection', WallDetection, queue_size=1, callback=self.wallCallback)
-        self.movePub = rospy.Publisher('cmd_vel_mux/input/safety_controller', Twist, queue_size=1)
+        self.movePub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=1)
         #MapService verknuepfen
         print "Verbinde mit MapService..."
         rospy.wait_for_service('MapServiceDriven')
@@ -56,22 +57,10 @@ class TBDriveForwardServer:
 
     def new_goal_callback(self):
         g = self.server.accept_new_goal()
-        print g
         self.speed = g.speed
         self.distance = g.distance / 100.0
-        if g.stop == True:
-            self.status = 'Stopped'
-            self.movePub.publish(Twist())
-            self.mapServiceD(self.lastOdomPos)
-            self.result = DriveForwardResult()
-            self.result.distance_driven = self.distance * 100
-            self.result.canceled = False
-            self.result.position = self.lastOdomPos.pose.pose.position
-            self.server.set_aborted(self.result)
-            print "Stopped by Command"
-        else:
-            self.initialOdomPosSet = False
-            self.status = 'Driving'
+        self.initialOdomPosSet = False
+        self.status = 'Driving'
 
     def update(self):
         twist = Twist()
@@ -80,16 +69,17 @@ class TBDriveForwardServer:
         cop = self.lastOdomPos
         odomDiffX = abs(sop.pose.pose.position.x - cop.pose.pose.position.x)
         odomDiffY = abs(sop.pose.pose.position.y - cop.pose.pose.position.y)
-        if self.status == 'Driving' and (odomDiffX > self.distance or odomDiffY > self.distance):
+        if odomDiffX > self.distance or odomDiffY > self.distance:
             print "Gefahren"
-            self.status = 'Done'
+            self.status = 'Stopped'
             self.mapServiceD(cop)
             self.initialOdomPosSet = False
-            self.result = DriveForwardResult()
-            self.result.distance_driven = self.distance * 100
-            self.result.canceled = False
-            self.result.position = cop.pose.pose.position
-            self.server.set_succeeded(self.result)
+            result = DriveForwardResult()
+            result.distance_driven = self.distance * 100
+            result.canceled = False
+            result.position = cop.pose.pose.position
+            self.server.set_succeeded(result)
+            return
         w = self.lastWallDetect
         if (not w == None):
             if w.close == 3:
@@ -100,19 +90,16 @@ class TBDriveForwardServer:
                 self.movePub.publish(Twist())
                 print "Stop vor Wand"
                 self.status = 'Stopped'
-                self.result = DriveForwardResult()
-                self.result.distance_driven = math.hypot(odomDiffX, odomDiffY)*100
-                self.result.position = cop.pose.pose.position
+                result = DriveForwardResult()
+                result.distance_driven = math.hypot(odomDiffX, odomDiffY)*100
+                result.position = cop.pose.pose.position
+                result.canceled = True
                 self.mapServiceD(cop)
-                self.result.canceled = True
-                self.server.set_aborted(self.result)
+                self.server.set_aborted(result)
+                return
         else:
             twist.angular.z = 0.0
-        if not self.status == 'Stopped':
-            print "Twisted..."
-            self.movePub.publish(twist)
-        else:
-            self.movePub.publish(Twist())
+        self.movePub.publish(twist)
 
 if __name__ == '__main__':
     rospy.init_node('DriveForwardServer')

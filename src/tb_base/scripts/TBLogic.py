@@ -31,7 +31,6 @@ class TBLogic(object):
         goal = DriveForwardActionGoal()
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
-        goal.goal.stop = False
         completed = self.drive_forward_client.send_goal_and_wait(goal.goal)
         if completed:
             print self.drive_forward_client.get_result()
@@ -54,14 +53,7 @@ class TBLogic(object):
         return feldbelegung
 
     def stop_driving(self):
-        goal = DriveForwardActionGoal()
-        goal.goal.distance = 0
-        goal.goal.speed = 0.2
-        goal.goal.stop = True
-        completed = self.drive_forward_client.send_goal_and_wait(goal.goal)
-        if completed:
-            print self.drive_forward_client.get_result()
-        return completed
+        self.drive_forward_client.cancel_all_goals()
 
     def turn_left(self):
         self.turn_around(90)
