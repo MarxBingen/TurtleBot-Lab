@@ -45,7 +45,7 @@ class TBDriveForwardServer:
 
     def odomCallback(self, odom):
         self.lastOdomPos = odom
-
+        
     def wallCallback(self, w):
         self.lastWallDetect = w
         if not self.status == 'Stopped':
@@ -109,6 +109,7 @@ class TBDriveForwardServer:
         else:
             twist.angular.z = 0.0
         if not self.status == 'Stopped':
+            print "Twisted..."
             self.movePub.publish(twist)
         else:
             self.movePub.publish(Twist())
