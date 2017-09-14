@@ -48,7 +48,7 @@ class TBTurnAroundServer:
         g = self.server.current_goal.get_goal()
         self.speed = -g.speed if g.degrees < 0 else g.speed
         self.speed = math.radians(self.speed)
-        print "new goal:", self.speed
+        #print "new goal:", self.speed
         self.degrees = g.degrees
         self.new_heading = self.heading + self.degrees
         self.initial_heading = self.heading

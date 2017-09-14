@@ -4,6 +4,7 @@
 	<node pkg="tb_base" name="TBPoiDetect" type="TBPoiDetect.py" output="screen" />
 	<node pkg="tb_base" name="TBDriveForward" type="TBDriveForward.py" output="screen"/>
 	<node pkg="tb_base" name="TBTurnAround" type="TBTurnAround.py" output="screen"/>
+	<node pkg="tb_base" name="TBPathFind" type="TBPathFind.py" output="screen"/>
 	<node pkg="tb_base" name="TBMap" type="TBMap.py" output="screen">
 		<param name="raster" value="0.38" />
 	</node>

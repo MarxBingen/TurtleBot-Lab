@@ -9,7 +9,7 @@ import tf2_ros
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped, Pose, Point, TransformStamped
-from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse
+from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse, MapInfo, MapInfoResponse
 from tb_base.msg import WallDetection
 
 class TBMap(object):
@@ -37,6 +37,7 @@ class TBMap(object):
         # services starten
         self.service_d = rospy.Service('MapServiceDriven', MapDriven, self.driven)
         self.service_t = rospy.Service('MapServiceTurned', MapTurned, self.turned)
+        self.service_i = rospy.Service('MapServiceInfo', MapInfo, self.get_map_info)
         self.map_pub = rospy.Publisher('mapLab', OccupancyGrid, queue_size=1)
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
@@ -44,6 +45,11 @@ class TBMap(object):
         rospy.sleep(rospy.Duration(2))
         self.updateOccupancyGrid()
         print "MapService gestartet"
+
+    def get_map_info(self, request):
+        result = MapInfoResponse()
+        result.map = self.map
+        return result
 
     def turned(self, request):
         """Callback for MapServiceTurned"""
@@ -57,7 +63,7 @@ class TBMap(object):
         self.heading_simple = SimpleHeading.from_quaternion(request.odom.pose.pose.orientation)
         self.pos_x = int(round(request.odom.pose.pose.position.x / self.raster))
         self.pos_y = int(round(request.odom.pose.pose.position.y / self.raster))
-        #self.print_position()
+        self.print_position()
         self.updateMap()
         return MapDrivenResponse()
 

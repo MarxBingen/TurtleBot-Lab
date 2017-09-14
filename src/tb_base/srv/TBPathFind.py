@@ -2,9 +2,11 @@
 
 import rospy
 from nav_msgs.msg import OccupancyGrid
+from geometry_msgs.msg import Point
+from tb_base.srv import PathFind, PathFindResponse, MapInfo,MapInfoRequest
 
 
-class TBPathFinding(object):
+class TBPathFind(object):
     '''
     knoten ist eine Liste von Knoten
     kanten ist eine Liste von 3-Tupeln: (knoten1, knoten2, kosten)
@@ -16,6 +18,21 @@ class TBPathFinding(object):
     def __init__(self):
         self.knoten = []
         self.kanten = []
+        self.s = rospy.Service('PathFind', PathFind, self.findpath)
+        print "Verbinde mit MapServiceInfo..."
+        rospy.wait_for_service('MapServiceInfo')
+        self.mapServiceInfo = rospy.ServiceProxy('MapServiceInfo', MapInfo)
+        print "PathFindService gestartet"
+
+    def findpath(self, request):
+        print request
+        #zuerst knoten und kanten aktualisieren
+        self.update_from_map()
+        result = PathFindResponse()
+        sk = (request.start.x,request.start.y)
+        zk = (request.ziel.x,request.ziel.y)
+        result.path = self.dijkstra(sk,zk)
+        return result
 
     def dijkstra(self, start, ziel):
         ''' knoten ist eine Liste von Knoten
@@ -58,66 +75,38 @@ class TBPathFinding(object):
                 weg += [aktiver_knoten[0]]
                 kosten += aktiver_knoten[1]
             weg.reverse()
-            return weg
+            return [Point(k[0],k[1],0) for k in weg]
         else:
-            raise "Kein Weg gefunden"
+            rospy.loginfo("Kein Weg gefunden")
+            return []
 
     def update_from_map(self):
         '''
         aktualisiert die Knoten und Kanten
         aus dem OccupancyGrid
         '''
-        map_data = OccupancyGrid(rospy.wait_for_message('mapLab', OccupancyGrid, 5.0))
+        response = self.mapServiceInfo(MapInfoRequest())
+        map_data = response.map
+        kantencheck = self._is_kante
         if map_data:
             self.knoten = []
-            #TODO knoten und kanten
-		
-
+            for i, item in enumerate(map_data.data):
+                if item == 0:
+                    x = i % map_data.info.width
+                    x = x - (map_data.info.width / 2)
+                    y = int(i / map_data.info.width)
+                    y = y - (map_data.info.height / 2)
+                    self.knoten.append((x,y))
+            self.kanten = [ (k1,k2,1) for k1 in self.knoten for k2 in self.knoten if kantencheck(k1,k2) ]
+            #TODO  und kanten
+    
+    
+    def _is_kante(self,knoten1,knoten2):
+            diff = (abs(knoten1[0]-knoten2[0]),abs(knoten1[1]-knoten2[1]))
+            diff_ok = (diff[0]==0 or diff[0]==1) and (diff[1]==0 or diff[1]==1)
+            return diff_ok and (diff[0]!=diff[1])
 
 if __name__ == '__main__':
-    knoten = []
-    knoten.append("1,1")
-    knoten.append("2,1")
-    knoten.append("3,1")
-    knoten.append("4,1")
-
-    knoten.append("1,2")
-    knoten.append("4,2")
-
-    knoten.append("1,3")
-    knoten.append("3,3")
-    knoten.append("4,3")
-
-    knoten.append("1,4")
-    knoten.append("2,4")
-    knoten.append("3,4")
-
-    knoten.append("3,5")
-    knoten.append("4,5")
-    knoten.append("5,5")
-
-    kanten = []
-    kanten.append(("1,1", "2,1", 1))
-    kanten.append(("1,1", "1,2", 1))
-
-    kanten.append(("2,1", "3,1", 1))
-    kanten.append(("3,1", "4,1", 1))
-
-    kanten.append(("4,1", "4,2", 1))
-    kanten.append(("4,2", "4,3", 1))
-    kanten.append(("4,3", "3,3", 1))
-    kanten.append(("3,3", "3,4", 1))
-    kanten.append(("3,4", "3,5", 1))
-    kanten.append(("3,5", "4,5", 1))
-    kanten.append(("4,5", "5,5", 1))
-
-    kanten.append(("1,2", "1,3", 1))
-    kanten.append(("1,3", "1,4", 1))
-    kanten.append(("1,4", "2,4", 1))
-    kanten.append(("2,4", "3,4", 1))
-    start = "1,1"
-    ziel = "5,5"
-    test1 = TBPathFinding()
-    test1.kanten = kanten
-    test1.knoten = knoten
-    print test1.dijkstra(start, ziel)
+    rospy.init_node('TBPathFindService')
+    p = TBPathFind()
+    rospy.spin()

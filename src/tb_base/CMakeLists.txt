@@ -64,6 +64,8 @@ add_service_files(
    PoiDetect.srv
    MapDriven.srv
    MapTurned.srv
+   PathFind.srv
+   MapInfo.srv
 )
 
 ## Generate actions in the 'action' folder
