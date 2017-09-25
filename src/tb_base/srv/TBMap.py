@@ -49,6 +49,7 @@ class TBMap(object):
     def get_map_info(self, request):
         result = MapInfoResponse()
         result.map = self.map
+        result.position = Point(x = self.pos_x,y = self.pos_y, z = 0)
         return result
 
     def turned(self, request):

@@ -1,2 +1,3 @@
 ---
-nav_msgs/OccupancyGrid map
+nav_msgs/OccupancyGrid map #die aktuelle map
+geometry_msgs/Point position #die aktuelle Position gerastert
