@@ -9,8 +9,9 @@ import tf2_ros
 from TBHeading import SimpleHeading
 from nav_msgs.msg import OccupancyGrid
 from geometry_msgs.msg import PoseStamped, Pose, Point, TransformStamped
-from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse, MapInfo, MapInfoResponse
-from tb_base.msg import WallDetection
+from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse
+from tb_base.srv import MapInfo, MapInfoResponse, MapPos, MapPosResponse
+from tb_base.msg import WallDetection, SimplePosition
 
 class TBMap(object):
     """Class for creating a Map"""
@@ -38,6 +39,7 @@ class TBMap(object):
         self.service_d = rospy.Service('MapServiceDriven', MapDriven, self.driven)
         self.service_t = rospy.Service('MapServiceTurned', MapTurned, self.turned)
         self.service_i = rospy.Service('MapServiceInfo', MapInfo, self.get_map_info)
+        self.service_p = rospy.Service('MapServicePos', MapPos, self.get_map_pos)
         self.map_pub = rospy.Publisher('mapLab', OccupancyGrid, queue_size=1)
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
@@ -46,10 +48,15 @@ class TBMap(object):
         self.updateOccupancyGrid()
         print "MapService gestartet"
 
+    def get_map_pos(self, request):
+        result = MapPosResponse()
+        result.position = Point(self.pos_x,self.pos_y,0)
+        result.richtung = self.heading_simple.name
+        return result
+
     def get_map_info(self, request):
         result = MapInfoResponse()
         result.map = self.map
-        result.position = Point(x = self.pos_x,y = self.pos_y, z = 0)
         return result
 
     def turned(self, request):

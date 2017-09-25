@@ -3,6 +3,7 @@
 from enum import Enum
 import math
 import tf
+from tb_base.msg import SimplePosition
 
 class SimpleHeading(Enum):
     """A Simple Class for dealing with simple Headings"""

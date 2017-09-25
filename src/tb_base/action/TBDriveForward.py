@@ -29,7 +29,7 @@ class TBDriveForwardServer:
     def __init__(self):
         print "DriveForwardActionServer wird initialisiert"
         self.server = actionlib.SimpleActionServer('DriveForward',DriveForwardAction,auto_start=False)
-        # Subscribe to Odom und Bumper
+        # Subscribe to Odom und wanderkennung
         self.odomSub = rospy.Subscriber('odom', Odometry, queue_size=1, callback=self.odomCallback)
         self.wallSub = rospy.Subscriber('wallDetection', WallDetection, queue_size=1, callback=self.wallCallback)
         self.movePub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=1)

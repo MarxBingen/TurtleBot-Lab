@@ -12,6 +12,7 @@ from std_msgs.msg import Empty
 class TBLogic(object):
 
     drive_forward_client = None
+    turn_around_client = None
 
     def __init__(self):
         #Odom resetten
@@ -27,7 +28,8 @@ class TBLogic(object):
 
     def drive_forward(self, strecke):
         '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
-        gefahren, muss also zum stop gecancelled werden'''
+        gefahren, muss also zum stop gecancelled werden
+        AKTUELL deaktiviert'''
         goal = DriveForwardActionGoal()
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
@@ -36,7 +38,7 @@ class TBLogic(object):
             print self.drive_forward_client.get_result()
         return completed
 
-    def turn_around(self, winkel):
+    def __turn_around(self, winkel):
         #es wird eine etwaige forward-action gestoppt
         self.stop_driving()
         goal = TurnAroundActionGoal()
@@ -56,10 +58,10 @@ class TBLogic(object):
         self.drive_forward_client.cancel_all_goals()
 
     def turn_left(self):
-        self.turn_around(90)
+        self.__turn_around(90)
 
     def turn_right(self):
-        self.turn_around(-90)
+        self.__turn_around(-90)
 
 
 if __name__ == '__main__':
