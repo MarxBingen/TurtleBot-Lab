@@ -56,16 +56,20 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    WallDetection.msg
+   SimplePosition.msg
+   PoiInfo.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
    FILES
    PoiDetect.srv
+   PoiDetectAll.srv
    MapDriven.srv
    MapTurned.srv
    PathFind.srv
    MapInfo.srv
+   MapPos.srv
 )
 
 ## Generate actions in the 'action' folder
