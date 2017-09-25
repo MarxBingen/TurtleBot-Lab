@@ -6,7 +6,7 @@ import numpy as np
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from tb_base.srv import PoiDetect, PoiDetectResponse, MapPos, PoiDetectAll, PoiDetectAllResponse
-from std_msgs.msg import Empty
+from std_srvs.srv import Empty
 from tb_base.msg import SimplePosition, PoiInfo
 
 
@@ -26,8 +26,8 @@ class TBPoiDetectService:
         self.mapServicePos = rospy.ServiceProxy('MapServicePos', MapPos)
         # Service starten
         self.s = rospy.Service('PoiDetectService', PoiDetect, self.detect)
+        self.all_service = rospy.Service('PoiDetectServiceAllPois', PoiDetectAll, self.allpois)
         self.reset_service = rospy.Service('PoiDetectServiceReset', Empty, self.reset)
-        self.reset_service = rospy.Service('PoiDetectServiceAllPois', PoiDetectAll, self.allpois)
         print "PoiDetectService gestartet"
 
     def allpois(self, req):
