@@ -1,4 +1,4 @@
 devel/
 build/
-src/tb_base/scripts/*.pyc
+src/tb_base/**/*.pyc
 src/tb_base/.vscode/
