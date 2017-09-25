@@ -50,8 +50,9 @@ class TBMap(object):
 
     def get_map_pos(self, request):
         result = MapPosResponse()
-        result.position = Point(self.pos_x,self.pos_y,0)
-        result.richtung = self.heading_simple.name
+        result.position = SimplePosition()
+        result.position.position =  Point(self.pos_x,self.pos_y,0)
+        result.position.richtung = self.heading_simple.name
         return result
 
     def get_map_info(self, request):

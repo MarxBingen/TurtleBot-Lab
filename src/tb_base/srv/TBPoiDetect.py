@@ -62,7 +62,7 @@ class TBPoiDetectService:
             maskGreen, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
         cntsRed = cv2.findContours(
             maskRed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[-2]
-        detectedColor = None
+        detectedColor = "None"
         if len(cntsGreen) > 0:
             # die groeste kontur finden
             c = max(cntsGreen, key=cv2.contourArea)
@@ -75,14 +75,14 @@ class TBPoiDetectService:
             if radius > 70 and radius < 150:
                 detectedColor = "Red"
         # wenn was erkannt wurde, merken
-        if detectedColor != None:
-            posdata = self.mapServicePos(Empty())
+        if detectedColor != "None":
+            posdata = self.mapServicePos()
             pi = PoiInfo()
-            pi.position = posdata
+            pi.position = posdata.position
             pi.color = detectedColor
             self.detections.append(pi)
         result = PoiDetectResponse()
-        result.detected = detectedColor != None
+        result.detected = detectedColor != "None"
         result.color = detectedColor
         print result
         return result

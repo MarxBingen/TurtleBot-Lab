@@ -7,12 +7,14 @@ import actionlib
 from tb_base.msg import DriveForwardAction, DriveForwardActionGoal, TurnAroundActionGoal, TurnAroundAction
 from tb_base.msg import WallDetection
 from std_msgs.msg import Empty
+from tb_base.srv import PoiDetect
 
 
 class TBLogic(object):
 
     drive_forward_client = None
     turn_around_client = None
+    poi_service = None
 
     def __init__(self):
         #Odom resetten
@@ -25,6 +27,8 @@ class TBLogic(object):
             'TurnAround', TurnAroundAction)
         self.drive_forward_client.wait_for_server()
         self.turn_around_client.wait_for_server()
+        rospy.wait_for_service('PoiDetectService')
+        self.poi_service = rospy.ServiceProxy('PoiDetectService', PoiDetect)
 
     def drive_forward(self, strecke):
         '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
@@ -63,6 +67,10 @@ class TBLogic(object):
     def turn_right(self):
         self.__turn_around(-90)
 
+    def check_poi(self):
+        result = self.poi_service()
+        return result
+
 
 if __name__ == '__main__':
     rospy.init_node('TBLogicNode')
@@ -70,6 +78,8 @@ if __name__ == '__main__':
     # TODO: remove when ready, testing only
     while not rospy.is_shutdown():
         p = xx.check_laser()
+        if p.front:
+            print xx.check_poi()
         if not p.right:
             print "Drehe rechts"
             xx.turn_right()
