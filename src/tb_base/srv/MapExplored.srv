@@ -1,0 +1,2 @@
+---
+bool explored #true when map fully explored

@@ -12,6 +12,7 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, TransformStamped
 from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenResponse
 from tb_base.srv import MapInfo, MapInfoResponse, MapPos, MapPosResponse
 from tb_base.msg import WallDetection, SimplePosition
+from tb_base.srv import MapExplored, MapExploredResponse
 
 class TBMap(object):
     """Class for creating a Map"""
@@ -40,6 +41,7 @@ class TBMap(object):
         self.service_t = rospy.Service('MapServiceTurned', MapTurned, self.turned)
         self.service_i = rospy.Service('MapServiceInfo', MapInfo, self.get_map_info)
         self.service_p = rospy.Service('MapServicePos', MapPos, self.get_map_pos)
+        self.service_e = rospy.Service('MapServiceExplored', MapExplored, self.map_explored)
         self.map_pub = rospy.Publisher('mapLab', OccupancyGrid, queue_size=1)
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
@@ -146,6 +148,36 @@ class TBMap(object):
         self.map.data = self.map_array
         self.broadcastMapToOdomTF()
         self.map_pub.publish(self.map)
+
+    def map_explored(self, request):
+        ''' prueft, ob die map vollstaendig erkundet wurde
+        '''
+        #bekannte freie felder (indizes) finden
+        known_indices = [i[0] for i in enumerate(myList) if i[1] == 0)]
+        #pruefen, ob diese befahren wurden->alle umliegenden nicht unknown (-1) sind
+        for i in known_indices:
+            x,y = self._xy_from_index(i)
+            left_i = self._index_from_xy(x, y - 1)
+            right_i = self._index_from_xy(x, y + 1)
+            top_i = self._index_from_xy(x + 1, y)
+            bottom_i = self._index_from_xy(x - 1, y)
+            left = self.map.data[left_i] != -1
+            right = self.map.data[right_i] != -1
+            top = self.map.data[top_i] != -1
+            bottom = self.map.data[bottom_i] != -1
+            if  not (left == right == top == bottom):
+                return MapExploredResponse(explored = false)
+        return MapExploredResponse(explored = true)
+
+    def _index_from_xy(self, x, y):
+        return y * (self.size * 2)) + x
+
+    def _xy_from_index(self, index):
+        x = i % self.size * 2
+        x = x - (self.size)
+        y = int(i / self.size * 2)
+        y = y - (self.size)
+        return x, y
 
 if __name__ == '__main__':
     rospy.init_node('MapService')
