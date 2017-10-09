@@ -70,6 +70,7 @@ add_service_files(
    PathFind.srv
    MapInfo.srv
    MapPos.srv
+   MapExplored.srv
 )
 
 ## Generate actions in the 'action' folder
