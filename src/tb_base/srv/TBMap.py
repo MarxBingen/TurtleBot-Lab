@@ -153,7 +153,9 @@ class TBMap(object):
         ''' prueft, ob die map vollstaendig erkundet wurde
         '''
         #bekannte freie felder (indizes) finden
-        known_indices = [i[0] for i in enumerate(myList) if i[1] == 0)]
+        known_indices = [i[0] for i in enumerate(self.map_array) if i[1] == 0]
+        if len(known_indices) == 0:
+            return MapExploredResponse(explored = False)
         #pruefen, ob diese befahren wurden->alle umliegenden nicht unknown (-1) sind
         for i in known_indices:
             x,y = self._xy_from_index(i)
@@ -166,16 +168,18 @@ class TBMap(object):
             top = self.map.data[top_i] != -1
             bottom = self.map.data[bottom_i] != -1
             if  not (left == right == top == bottom):
-                return MapExploredResponse(explored = false)
-        return MapExploredResponse(explored = true)
+                return MapExploredResponse(explored = False)
+        return MapExploredResponse(explored = True)
 
     def _index_from_xy(self, x, y):
-        return y * (self.size * 2)) + x
+        x = x + self.size
+        y = y + self.size
+        return (y * (self.size * 2)) + x
 
     def _xy_from_index(self, index):
-        x = index % self.size * 2
+        x = index % (self.size * 2)
         x = x - (self.size)
-        y = int(index / self.size * 2)
+        y = int(index / (self.size * 2))
         y = y - (self.size)
         return x, y
 

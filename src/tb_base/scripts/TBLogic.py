@@ -7,7 +7,7 @@ import actionlib
 from tb_base.msg import DriveForwardAction, DriveForwardActionGoal, TurnAroundActionGoal, TurnAroundAction
 from tb_base.msg import WallDetection
 from std_msgs.msg import Empty
-from tb_base.srv import PoiDetect
+from tb_base.srv import PoiDetect, MapExplored
 
 
 class TBLogic(object):
@@ -30,12 +30,13 @@ class TBLogic(object):
         rospy.wait_for_service('PoiDetectService')
         self.poi_service = rospy.ServiceProxy('PoiDetectService', PoiDetect)
         rospy.wait_for_service('MapServiceExplored')
-        self.map_explored_service = rospy.ServiceProxy('MapServiceExplored', PoiDetect)
+        self.map_explored_service = rospy.ServiceProxy('MapServiceExplored', MapExplored)
 
     def drive_forward(self, strecke):
         '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
         gefahren, muss also zum stop gecancelled werden
         AKTUELL deaktiviert'''
+        rospy.sleep(2)
         goal = DriveForwardActionGoal()
         goal.goal.distance = strecke
         goal.goal.speed = 0.2
@@ -76,6 +77,7 @@ class TBLogic(object):
     def check_explored(self):
         result = self.map_explored_service()
         print result
+        return result.explored
 
 
 if __name__ == '__main__':
@@ -96,5 +98,6 @@ if __name__ == '__main__':
         else:
             print "Drehe links"
             xx.turn_left()
-        xx.check_explored()
+        if xx.check_explored():
+            break
     rospy.spin()
