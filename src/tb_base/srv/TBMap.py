@@ -173,9 +173,9 @@ class TBMap(object):
         return y * (self.size * 2)) + x
 
     def _xy_from_index(self, index):
-        x = i % self.size * 2
+        x = index % self.size * 2
         x = x - (self.size)
-        y = int(i / self.size * 2)
+        y = int(index / self.size * 2)
         y = y - (self.size)
         return x, y
 

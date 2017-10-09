@@ -29,6 +29,8 @@ class TBLogic(object):
         self.turn_around_client.wait_for_server()
         rospy.wait_for_service('PoiDetectService')
         self.poi_service = rospy.ServiceProxy('PoiDetectService', PoiDetect)
+        rospy.wait_for_service('MapServiceExplored')
+        self.map_explored_service = rospy.ServiceProxy('MapServiceExplored', PoiDetect)
 
     def drive_forward(self, strecke):
         '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
@@ -71,6 +73,10 @@ class TBLogic(object):
         result = self.poi_service()
         return result
 
+    def check_explored(self):
+        result = self.map_explored_service()
+        print result
+
 
 if __name__ == '__main__':
     rospy.init_node('TBLogicNode')
@@ -90,4 +96,5 @@ if __name__ == '__main__':
         else:
             print "Drehe links"
             xx.turn_left()
+        xx.check_explored()
     rospy.spin()
