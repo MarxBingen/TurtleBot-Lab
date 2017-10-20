@@ -7,7 +7,7 @@ import actionlib
 from tb_base.msg import DriveForwardAction, DriveForwardActionGoal, TurnAroundActionGoal, TurnAroundAction
 from tb_base.msg import WallDetection
 from std_msgs.msg import Empty
-from tb_base.srv import PoiDetect, MapExplored
+from tb_base.srv import PoiDetect, MapExplored, MapPos, PathFind, PathFindRequest
 
 
 class TBLogic(object):
@@ -27,10 +27,18 @@ class TBLogic(object):
             'TurnAround', TurnAroundAction)
         self.drive_forward_client.wait_for_server()
         self.turn_around_client.wait_for_server()
+
         rospy.wait_for_service('PoiDetectService')
         self.poi_service = rospy.ServiceProxy('PoiDetectService', PoiDetect)
+
         rospy.wait_for_service('MapServiceExplored')
         self.map_explored_service = rospy.ServiceProxy('MapServiceExplored', MapExplored)
+
+        rospy.wait_for_service('MapServicePos')
+        self.map_pos_service = rospy.ServiceProxy('MapServicePos', MapPos)
+
+        rospy.wait_for_service('PathFind')
+        self.path_service = rospy.ServiceProxy('PathFind', PathFind)
 
     def drive_forward(self, strecke):
         '''faehrt vorwaerst, eigene implementierung faehrt weiter, auch wenn strecke
@@ -78,6 +86,55 @@ class TBLogic(object):
         result = self.map_explored_service()
         print result
         return result.explored
+
+    def get_map_pos(self):
+        result = self.map_pos_service()
+        print result
+
+    def get_path(self, start, ziel):
+        req = PathFindRequest()
+        req.start = start
+        req.ziel = ziel
+        result = self.path_service(req)
+        return result
+
+    def turn_to_next_point(self, p):
+        c = self.get_map_pos()
+        #westen oder osten
+        if (c.position.x == p.x):
+            #nach westen
+            if (p.y < c.position.y):
+                if c.richtung == 'NORD':
+                    self.__turn_around(90)
+                elif c.richtung == 'OST':
+                    self.__turn_around(180)
+                elif c.richtung == 'SUED':
+                    self.__turn_around(-90)
+            #nach osten
+            else:
+                if c.richtung == 'NORD':
+                    self.__turn_around(-90)
+                elif c.richtung == 'WEST':
+                    self.__turn_around(180)
+                elif c.richtung == 'SUED':
+                    self.__turn_around(90)
+        #norden oder sueden
+        else:
+            #nach Norden
+            if (p.x > c.position.x):
+                if c.richtung == 'WEST':
+                    self.turn_right()
+                elif c.richtung == 'OST':
+                    self.turn_left()
+                elif c.richtung == 'SUED':
+                    self.__turn_around(180)
+            else:
+                if c.richtung == 'WEST':
+                    self.turn_left()
+                elif c.richtung == 'OST':
+                    self.turn_right()
+                elif c.richtung == 'NORD':
+                    self.__turn_around(180)
 
 
 if __name__ == '__main__':
