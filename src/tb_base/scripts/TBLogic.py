@@ -89,7 +89,7 @@ class TBLogic(object):
 
     def get_map_pos(self):
         result = self.map_pos_service()
-        print result
+        return result.position
 
     def get_path(self, start, ziel):
         req = PathFindRequest()
@@ -103,7 +103,7 @@ class TBLogic(object):
         #westen oder osten
         if (c.position.x == p.x):
             #nach westen
-            if (p.y < c.position.y):
+            if (p.y > c.position.y):
                 if c.richtung == 'NORD':
                     self.__turn_around(90)
                 elif c.richtung == 'OST':
