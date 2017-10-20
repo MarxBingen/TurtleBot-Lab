@@ -32,7 +32,7 @@ class TBDriveForwardServer:
         # Subscribe to Odom und wanderkennung
         self.odomSub = rospy.Subscriber('odom', Odometry, queue_size=1, callback=self.odomCallback)
         self.wallSub = rospy.Subscriber('wallDetection', WallDetection, queue_size=1, callback=self.wallCallback)
-        self.movePub = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=1)
+        self.movePub = rospy.Publisher('mobile_base/commands/velocity', Twist, queue_size=1)
         #MapService verknuepfen
         print "Verbinde mit MapService..."
         rospy.wait_for_service('MapServiceDriven')
