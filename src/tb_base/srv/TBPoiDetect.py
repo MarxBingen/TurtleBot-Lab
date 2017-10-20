@@ -71,14 +71,14 @@ class TBPoiDetectService:
             if radius > 70 and radius < 150:
                 detectedColor = "Green"
                 for bs in blinkstick.find_all():
-					bs.set_color(color = 'green')
+					bs.set_color('green')
         if len(cntsRed) > 0:
             c = max(cntsRed, key=cv2.contourArea)
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             if radius > 70 and radius < 150:
                 detectedColor = "Red"
                 for bs in blinkstick.find_all():
-					bs.set_color(color = 'red')
+					bs.set_color('red')
         # wenn was erkannt wurde, merken
         if detectedColor != "None":
             posdata = self.mapServicePos()
