@@ -13,6 +13,7 @@ from tb_base.srv import MapDriven, MapTurned, MapTurnedResponse, MapDrivenRespon
 from tb_base.srv import MapInfo, MapInfoResponse, MapPos, MapPosResponse
 from tb_base.msg import WallDetection, SimplePosition
 from tb_base.srv import MapExplored, MapExploredResponse
+from std_srvs.srv import Trigger, TriggerResponse
 
 class TBMap(object):
     """Class for creating a Map"""
@@ -42,6 +43,7 @@ class TBMap(object):
         self.service_i = rospy.Service('MapServiceInfo', MapInfo, self.get_map_info)
         self.service_p = rospy.Service('MapServicePos', MapPos, self.get_map_pos)
         self.service_e = rospy.Service('MapServiceExplored', MapExplored, self.map_explored)
+        self.service_reset = rospy.Service('MapServiceReset', Trigger, self.reset_map)
         self.map_pub = rospy.Publisher('mapLab', OccupancyGrid, queue_size=1)
         self.tf_pub = tf2_ros.TransformBroadcaster()
         self.pose_pub = rospy.Publisher('myPose', PoseStamped, queue_size=1)
@@ -49,6 +51,13 @@ class TBMap(object):
         rospy.sleep(rospy.Duration(2))
         self.updateOccupancyGrid()
         print "MapService gestartet"
+
+    def reset_map(self,req):
+        self.map_array = [-1] * (size * 2 * size * 2)
+        response = TriggerResponse()
+        response.message = "Map wurde geloescht"
+        response.success = True
+        return response
 
     def get_map_pos(self, request):
         result = MapPosResponse()
