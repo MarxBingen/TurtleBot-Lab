@@ -9,6 +9,7 @@ from tb_base.srv import PoiDetect, PoiDetectResponse, MapPos, PoiDetectAll, PoiD
 from std_srvs.srv import Empty
 from tb_base.msg import SimplePosition, PoiInfo
 
+from blinkstick import blinkstick
 
 class TBPoiDetectService:
 
@@ -69,11 +70,15 @@ class TBPoiDetectService:
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             if radius > 70 and radius < 150:
                 detectedColor = "Green"
+                for bs in blinkstick.find_all():
+					bs.set_color(name='green')
         if len(cntsRed) > 0:
             c = max(cntsRed, key=cv2.contourArea)
             ((x, y), radius) = cv2.minEnclosingCircle(c)
             if radius > 70 and radius < 150:
                 detectedColor = "Red"
+                for bs in blinkstick.find_all():
+					bs.set_color(name='red')
         # wenn was erkannt wurde, merken
         if detectedColor != "None":
             posdata = self.mapServicePos()
