@@ -99,5 +99,6 @@ if __name__ == '__main__':
             print "Drehe links"
             xx.turn_left()
         if xx.check_explored():
+            print "Labyrinth vollstaendig erkundet !"
             break
     rospy.spin()
