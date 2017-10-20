@@ -81,7 +81,7 @@ class TBPoiDetectService:
             pi = PoiInfo()
             pi.position = posdata.position
             for bs in blinkstick.find_all():
-					bs.set_color(name='detectedColor')
+					bs.set_color(detectedColor)
             pi.color = detectedColor
             self.detections.append(pi)
         else:
