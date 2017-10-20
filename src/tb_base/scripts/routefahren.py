@@ -25,23 +25,23 @@ if __name__ == '__main__':
         c = xx.get_map_pos()
         print c
         path = xx.get_path(c.position,p1)
-        while not rospy.is_shutdown():
-            #zuerst vom ausgangspunkt zum start punkt fahren
-            while not (c.position.x == p1.x and c.position.y == p1.y):
-                if rospy.is_shutdown():
-                    break
-                path = xx.get_path(c.position,p1)
-                xx.turn_to_next_point(path.path[1])
-                xx.drive_forward(38)
-                c = xx.get_map_pos()
-            #zuerst vom ausgangspunkt zum start punkt fahren
-            while not (c.position.x == p2.x and c.position.y == p2.y):
-                if rospy.is_shutdown():
-                    break
-                path = xx.get_path(c.position,p2)
-                xx.turn_to_next_point(path.path[1])
-                xx.drive_forward(38)
-                c = xx.get_map_pos()
+        #while not rospy.is_shutdown():
+        #zuerst vom ausgangspunkt zum start punkt fahren
+        while not (c.position.x == p1.x and c.position.y == p1.y):
+            if rospy.is_shutdown():
+                break
+            path = xx.get_path(c.position,p1)
+            xx.turn_to_next_point(path.path[1])
+            xx.drive_forward(38)
+            c = xx.get_map_pos()
+        #zuerst vom ausgangspunkt zum start punkt fahren
+        while not (c.position.x == p2.x and c.position.y == p2.y):
+            if rospy.is_shutdown():
+                break
+            path = xx.get_path(c.position,p2)
+            xx.turn_to_next_point(path.path[1])
+            xx.drive_forward(38)
+            c = xx.get_map_pos()
         if rospy.is_shutdown():
             print "Abgebrochen ROS Shutdown"
         else:
