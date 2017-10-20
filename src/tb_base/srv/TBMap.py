@@ -53,7 +53,7 @@ class TBMap(object):
         print "MapService gestartet"
 
     def reset_map(self,req):
-        self.map_array = [-1] * (size * 2 * size * 2)
+        self.map_array = [-1] * (self.size * 2 * self.size * 2)
         response = TriggerResponse()
         response.message = "Map wurde geloescht"
         response.success = True
